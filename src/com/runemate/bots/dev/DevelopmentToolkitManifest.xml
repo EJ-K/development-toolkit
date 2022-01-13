@@ -3,7 +3,7 @@
     <name>Development Toolkit</name>
     <tag-line>RuneMate's Swiss Army Knife</tag-line>
     <description>Presents runtime data, such as the loaded NPCs, to assist in bot development.</description>
-    <version>2.0.11</version>
+    <version>2.1.0</version>
     <compatibility>
         <game>OSRS</game>
         <game>RS3</game>
@@ -20,6 +20,7 @@
     </tags>
     <resources>
         <resource>com/runemate/bots/dev/ui/DevelopmentToolkitPage.fxml</resource>
+        <resource>com/runemate/bots/dev/ui/element/query/QueryBuilderPage.fxml</resource>
         <resource>com/runemate/bots/dev/ui/DevelopmentToolkitPage.css</resource>
     </resources>
 </manifest>
