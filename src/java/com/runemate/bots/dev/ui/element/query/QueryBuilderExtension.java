@@ -95,8 +95,7 @@ public class QueryBuilderExtension extends VBox implements Initializable {
         NEWQUERY_SUPPLIERS.put(InterfaceComponentQueryBuilder.class, Interfaces::newQuery);
     }
 
-    private final ObjectProperty<QueryBuilderTransform> transformProperty =
-        new SimpleObjectProperty<>();
+    private final ObjectProperty<QueryBuilderTransform> transformProperty = new SimpleObjectProperty<>();
     private final DevelopmentToolkit bot;
     private QueryBuilderComboBox qbSelector;
     @FXML
@@ -115,17 +114,13 @@ public class QueryBuilderExtension extends VBox implements Initializable {
 
     public QueryBuilderExtension(final DevelopmentToolkit bot) throws IOException {
         this.bot = bot;
-        InputStream fxmlInputStream = Resources.getAsStream(
-            bot,
-            "com/runemate/bots/dev/ui/element/query/QueryBuilderPage.fxml"
-        );
+        InputStream fxmlInputStream = Resources.getAsStream(bot, "fxml/QueryBuilderPage.fxml");
         final FXMLLoader loader = new FXMLLoader();
         loader.setController(this);
         loader.setRoot(this);
         loader.load(fxmlInputStream);
         try {
-            final URL url = bot.getPlatform().invokeAndWait(
-                () -> Resources.getAsURL("com/runemate/bots/dev/ui/DevelopmentToolkitPage.css"));
+            final URL url = bot.getPlatform().invokeAndWait(() -> Resources.getAsURL("css/DevelopmentToolkitPage.css"));
             getStylesheets().add(url.toExternalForm());
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();

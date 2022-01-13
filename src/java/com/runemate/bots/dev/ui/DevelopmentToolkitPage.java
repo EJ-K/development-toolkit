@@ -88,15 +88,13 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
 
     public DevelopmentToolkitPage(DevelopmentToolkit bot) throws IOException {
         InputStream fxmlInputStream =
-            Resources.getAsStream("com/runemate/bots/dev/ui/DevelopmentToolkitPage.fxml");
+            Resources.getAsStream("fxml/DevelopmentToolkitPage.fxml");
         this.bot = bot;
         final FXMLLoader loader = new FXMLLoader();
         loader.setController(this);
         loader.setRoot(this);
         loader.load(fxmlInputStream);
-        getStylesheets().add(
-            Resources.getAsURL("com/runemate/bots/dev/ui/DevelopmentToolkitPage.css")
-                .toExternalForm());
+        getStylesheets().add(Resources.getAsURL("css/DevelopmentToolkitPage.css").toExternalForm());
     }
 
     public static <T> T optionallyThreadedCall(Callable<T> callable) {

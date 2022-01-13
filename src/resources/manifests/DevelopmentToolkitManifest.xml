@@ -6,7 +6,6 @@
     <version>2.1.0</version>
     <compatibility>
         <game>OSRS</game>
-        <game>RS3</game>
     </compatibility>
     <categories>
         <category>DEVELOPER_TOOLS</category>
@@ -19,8 +18,8 @@
         <tag>debug</tag>
     </tags>
     <resources>
-        <resource>com/runemate/bots/dev/ui/DevelopmentToolkitPage.fxml</resource>
-        <resource>com/runemate/bots/dev/ui/element/query/QueryBuilderPage.fxml</resource>
-        <resource>com/runemate/bots/dev/ui/DevelopmentToolkitPage.css</resource>
+        <resource>css/DevelopmentToolkitPage.css</resource>
+        <resource>fxml/DevelopmentToolkitPage.fxml</resource>
+        <resource>fxml/QueryBuilderPage.fxml</resource>
     </resources>
 </manifest>
