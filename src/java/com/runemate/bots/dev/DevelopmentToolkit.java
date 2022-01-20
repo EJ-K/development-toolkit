@@ -1,165 +1,48 @@
 package com.runemate.bots.dev;
 
-import com.runemate.bots.dev.ui.DevelopmentToolkitPage;
-import com.runemate.bots.dev.ui.QueriableTreeItem;
-import com.runemate.bots.dev.ui.ReflectiveTreeItem;
-import com.runemate.bots.dev.ui.element.adapter.VarbitEventWrapper;
-import com.runemate.bots.dev.ui.overlay.DevelopmentToolkitOverlay;
-import com.runemate.game.api.client.embeddable.EmbeddableUI;
-import com.runemate.game.api.hybrid.Environment;
-import com.runemate.game.api.hybrid.GameEvents;
-import com.runemate.game.api.hybrid.RuneScape;
-import com.runemate.game.api.hybrid.cache.configs.EnumDefinitions;
-import com.runemate.game.api.hybrid.cache.configs.IdentityKits;
-import com.runemate.game.api.hybrid.cache.configs.OverlayDefinitions;
-import com.runemate.game.api.hybrid.cache.configs.SpotAnimationDefinitions;
-import com.runemate.game.api.hybrid.cache.configs.UnderlayDefinitions;
-import com.runemate.game.api.hybrid.cache.materials.Materials;
-import com.runemate.game.api.hybrid.entities.Actor;
-import com.runemate.game.api.hybrid.entities.Entity;
-import com.runemate.game.api.hybrid.entities.GameObject;
-import com.runemate.game.api.hybrid.entities.LocatableEntity;
-import com.runemate.game.api.hybrid.entities.Npc;
-import com.runemate.game.api.hybrid.entities.Player;
-import com.runemate.game.api.hybrid.entities.definitions.GameObjectDefinition;
-import com.runemate.game.api.hybrid.entities.definitions.ItemDefinition;
-import com.runemate.game.api.hybrid.entities.definitions.NpcDefinition;
-import com.runemate.game.api.hybrid.entities.details.Interactable;
-import com.runemate.game.api.hybrid.entities.details.Renderable;
-import com.runemate.game.api.hybrid.entities.details.Rotatable;
-import com.runemate.game.api.hybrid.input.Keyboard;
-import com.runemate.game.api.hybrid.input.Mouse;
-import com.runemate.game.api.hybrid.local.AccountInfo;
-import com.runemate.game.api.hybrid.local.Camera;
-import com.runemate.game.api.hybrid.local.House;
-import com.runemate.game.api.hybrid.local.Quests;
-import com.runemate.game.api.hybrid.local.Screen;
-import com.runemate.game.api.hybrid.local.Skill;
-import com.runemate.game.api.hybrid.local.Skills;
+import com.runemate.bots.dev.ui.*;
+import com.runemate.bots.dev.ui.element.adapter.*;
+import com.runemate.bots.dev.ui.overlay.*;
+import com.runemate.game.api.client.embeddable.*;
+import com.runemate.game.api.hybrid.*;
+import com.runemate.game.api.hybrid.cache.configs.*;
+import com.runemate.game.api.hybrid.cache.materials.*;
+import com.runemate.game.api.hybrid.entities.*;
+import com.runemate.game.api.hybrid.entities.definitions.*;
+import com.runemate.game.api.hybrid.entities.details.*;
+import com.runemate.game.api.hybrid.input.*;
 import com.runemate.game.api.hybrid.local.Varbits;
-import com.runemate.game.api.hybrid.local.Varps;
-import com.runemate.game.api.hybrid.local.Wilderness;
-import com.runemate.game.api.hybrid.local.Worlds;
-import com.runemate.game.api.hybrid.local.hud.GraphicsConfiguration;
-import com.runemate.game.api.hybrid.local.hud.HintArrows;
+import com.runemate.game.api.hybrid.local.*;
 import com.runemate.game.api.hybrid.local.hud.Menu;
-import com.runemate.game.api.hybrid.local.hud.Model;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Bank;
-import com.runemate.game.api.hybrid.local.hud.interfaces.ChatDialog;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Chatbox;
-import com.runemate.game.api.hybrid.local.hud.interfaces.DepositBox;
-import com.runemate.game.api.hybrid.local.hud.interfaces.EnterAmountDialog;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Equipment;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Health;
-import com.runemate.game.api.hybrid.local.hud.interfaces.InterfaceComponent;
-import com.runemate.game.api.hybrid.local.hud.interfaces.InterfaceContainer;
-import com.runemate.game.api.hybrid.local.hud.interfaces.InterfaceContainers;
-import com.runemate.game.api.hybrid.local.hud.interfaces.InterfaceWindows;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Interfaces;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Inventory;
-import com.runemate.game.api.hybrid.local.hud.interfaces.NpcContact;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Shop;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Trade;
-import com.runemate.game.api.hybrid.local.hud.interfaces.WorldHop;
-import com.runemate.game.api.hybrid.local.sound.SoundEffects;
+import com.runemate.game.api.hybrid.local.hud.*;
+import com.runemate.game.api.hybrid.local.hud.interfaces.*;
+import com.runemate.game.api.hybrid.local.sound.*;
 import com.runemate.game.api.hybrid.location.Area;
-import com.runemate.game.api.hybrid.location.Coordinate;
-import com.runemate.game.api.hybrid.location.navigation.Traversal;
-import com.runemate.game.api.hybrid.net.GrandExchange;
-import com.runemate.game.api.hybrid.region.GameObjects;
-import com.runemate.game.api.hybrid.region.GroundItems;
-import com.runemate.game.api.hybrid.region.Npcs;
-import com.runemate.game.api.hybrid.region.Players;
-import com.runemate.game.api.hybrid.region.Projectiles;
-import com.runemate.game.api.hybrid.region.Region;
-import com.runemate.game.api.hybrid.region.SpotAnimations;
-import com.runemate.game.api.hybrid.util.Validatable;
-import com.runemate.game.api.osrs.local.AchievementDiary;
-import com.runemate.game.api.osrs.local.KourendHouseFavour;
-import com.runemate.game.api.osrs.local.hud.interfaces.ControlPanelTab;
-import com.runemate.game.api.osrs.local.hud.interfaces.LootingBag;
-import com.runemate.game.api.osrs.local.hud.interfaces.Magic;
-import com.runemate.game.api.osrs.local.hud.interfaces.MakeAllInterface;
-import com.runemate.game.api.osrs.local.hud.interfaces.OptionsTab;
-import com.runemate.game.api.osrs.local.hud.interfaces.Prayer;
-import com.runemate.game.api.rs3.local.CombatMode;
-import com.runemate.game.api.rs3.local.InterfaceMode;
-import com.runemate.game.api.rs3.local.hud.Powers;
-import com.runemate.game.api.rs3.local.hud.interfaces.BeastOfBurden;
-import com.runemate.game.api.rs3.local.hud.interfaces.Lodestone;
-import com.runemate.game.api.rs3.local.hud.interfaces.LootInventory;
-import com.runemate.game.api.rs3.local.hud.interfaces.MakeXInterface;
-import com.runemate.game.api.rs3.local.hud.interfaces.MoneyPouch;
-import com.runemate.game.api.rs3.local.hud.interfaces.Summoning;
-import com.runemate.game.api.rs3.local.hud.interfaces.eoc.ActionBar;
-import com.runemate.game.api.rs3.local.hud.interfaces.eoc.ActionWindow;
-import com.runemate.game.api.rs3.local.hud.interfaces.legacy.LegacyTab;
-import com.runemate.game.api.rs3.region.Familiars;
-import com.runemate.game.api.script.Execution;
-import com.runemate.game.api.script.framework.LoopingBot;
-import com.runemate.game.api.script.framework.listeners.AnimationListener;
-import com.runemate.game.api.script.framework.listeners.ChatboxListener;
-import com.runemate.game.api.script.framework.listeners.DeathListener;
-import com.runemate.game.api.script.framework.listeners.EngineListener;
-import com.runemate.game.api.script.framework.listeners.EquipmentListener;
-import com.runemate.game.api.script.framework.listeners.GrandExchangeListener;
-import com.runemate.game.api.script.framework.listeners.HitsplatListener;
-import com.runemate.game.api.script.framework.listeners.InventoryListener;
-import com.runemate.game.api.script.framework.listeners.MenuInteractionListener;
-import com.runemate.game.api.script.framework.listeners.MoneyPouchListener;
-import com.runemate.game.api.script.framework.listeners.PlayerMovementListener;
-import com.runemate.game.api.script.framework.listeners.ProjectileLaunchListener;
-import com.runemate.game.api.script.framework.listeners.SkillListener;
-import com.runemate.game.api.script.framework.listeners.TargetListener;
-import com.runemate.game.api.script.framework.listeners.VarbitListener;
-import com.runemate.game.api.script.framework.listeners.VarpListener;
-import com.runemate.game.api.script.framework.listeners.events.AnimationEvent;
-import com.runemate.game.api.script.framework.listeners.events.DeathEvent;
-import com.runemate.game.api.script.framework.listeners.events.GrandExchangeEvent;
-import com.runemate.game.api.script.framework.listeners.events.HitsplatEvent;
-import com.runemate.game.api.script.framework.listeners.events.ItemEvent;
-import com.runemate.game.api.script.framework.listeners.events.MenuInteractionEvent;
-import com.runemate.game.api.script.framework.listeners.events.MessageEvent;
-import com.runemate.game.api.script.framework.listeners.events.MoneyPouchEvent;
-import com.runemate.game.api.script.framework.listeners.events.PlayerMovementEvent;
-import com.runemate.game.api.script.framework.listeners.events.ProjectileLaunchEvent;
-import com.runemate.game.api.script.framework.listeners.events.SkillEvent;
-import com.runemate.game.api.script.framework.listeners.events.TargetEvent;
-import com.runemate.game.api.script.framework.listeners.events.VarbitEvent;
-import com.runemate.game.api.script.framework.listeners.events.VarpEvent;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
+import com.runemate.game.api.hybrid.location.*;
+import com.runemate.game.api.hybrid.location.navigation.*;
+import com.runemate.game.api.hybrid.net.*;
+import com.runemate.game.api.hybrid.region.*;
+import com.runemate.game.api.hybrid.util.*;
+import com.runemate.game.api.osrs.local.*;
+import com.runemate.game.api.osrs.local.hud.interfaces.*;
+import com.runemate.game.api.script.*;
+import com.runemate.game.api.script.framework.*;
+import com.runemate.game.api.script.framework.listeners.*;
+import com.runemate.game.api.script.framework.listeners.events.*;
+import java.awt.*;
+import java.awt.geom.*;
+import java.io.*;
+import java.lang.reflect.*;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javafx.application.Platform;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.StringProperty;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeTablePosition;
-import javafx.scene.control.TreeTableView;
-import javafx.util.Pair;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.*;
+import java.util.regex.*;
+import java.util.stream.*;
+import javafx.application.*;
+import javafx.beans.property.*;
+import javafx.scene.control.*;
+import javafx.util.*;
 
 public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
     GrandExchangeListener,
@@ -179,6 +62,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
     TargetListener,
     EngineListener/*,
         VarcListener*/ {
+
     private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
@@ -335,8 +219,10 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
           byte[] parameterAnnotations,
           byte[] annotationDefault)
      */
-    public static Method createSpoofedMethod(Class<?> declaringClass, String name,
-        Class<?> returnType) {
+    public static Method createSpoofedMethod(
+        Class<?> declaringClass, String name,
+        Class<?> returnType
+    ) {
         try {
             Constructor<Method> methodConstructor =
                 Method.class.getDeclaredConstructor(Class.class, String.class, Class[].class,
@@ -563,84 +449,12 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
                 new ReflectiveTreeItem.StaticReflectiveTreeItem(MakeAllInterface.class)
             );
         }
-        if (Environment.isRS3()) {
-            botInterfaceProperty().get().getEntitiesTreeTableView().getRoot().getChildren().add(
-                buildPseudoRootTreeItem(
-                    ActionBar.class.getSimpleName(),
-                    () -> ActionBar.newQuery().filled(true).results(), entitiesSearchTextProperty,
-                    entitiesSearchRegexProperty
-                ));
-            botInterfaceProperty().get().getEntitiesTreeTableView().getRoot().getChildren().add(
-                buildPseudoRootTreeItem(
-                    Familiars.class.getSimpleName(), Familiars::getLoaded,
-                    entitiesSearchTextProperty, entitiesSearchRegexProperty
-                ));
-            botInterfaceProperty().get().getEventsTreeTableView().getRoot().getChildren().add(
-                moneyPouchTreeItem =
-                    new TreeItem<>(new Pair<>(null, MoneyPouchListener.class.getSimpleName())));
-            botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().addAll(
-
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(ActionBar.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(ActionWindow.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(BeastOfBurden.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(CombatMode.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(InterfaceMode.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(GraphicsConfiguration.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(LegacyTab.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(Lodestone.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(LootInventory.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(MakeXInterface.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(MoneyPouch.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(Powers.class) {
-                    @Override
-                    public List<TreeItem<Pair<Method, Object>>> query() {
-                        final List<TreeItem<Pair<Method, Object>>> results =
-                            new ArrayList<>(Arrays.asList(
-                                new StaticReflectiveTreeItem(Powers.Magic.class) {
-                                    @Override
-                                    public List<TreeItem<Pair<Method, Object>>> query() {
-                                        final List<TreeItem<Pair<Method, Object>>> results =
-                                            new ArrayList<>(Arrays.asList(
-                                                new StaticReflectiveTreeItem(
-                                                    Powers.Magic.Lunar.class),
-                                                new StaticReflectiveTreeItem(
-                                                    Powers.Magic.Ancient.class),
-                                                new StaticReflectiveTreeItem(
-                                                    Powers.Magic.Dungeoneering.class),
-                                                new StaticReflectiveTreeItem(
-                                                    Powers.Magic.Book.class),
-                                                new StaticReflectiveTreeItem(
-                                                    Powers.Magic.Category.class)
-                                            ));
-                                        results.addAll(super.query());
-                                        return results;
-                                    }
-                                },
-                                new StaticReflectiveTreeItem(Powers.Prayer.class) {
-                                    @Override
-                                    public List<TreeItem<Pair<Method, Object>>> query() {
-                                        final List<TreeItem<Pair<Method, Object>>> results =
-                                            new ArrayList<>(Arrays.asList(
-                                                new StaticReflectiveTreeItem(
-                                                    Powers.Prayer.Curse.class),
-                                                new StaticReflectiveTreeItem(
-                                                    Powers.Prayer.Book.class)
-                                            ));
-                                        results.addAll(super.query());
-                                        return results;
-                                    }
-                                }
-                            ));
-                        results.addAll(super.query());
-                        return results;
-                    }
-                }, new ReflectiveTreeItem.StaticReflectiveTreeItem(Summoning.class)
-            );
-        }
         botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().sort(
             Comparator.comparing(
-                o -> ((o.getValue().getValue() instanceof Class) ? (Class) o.getValue().getValue() :
-                    o.getValue().getValue().getClass()).getSimpleName()));
+                o -> (
+                    (o.getValue().getValue() instanceof Class) ? (Class) o.getValue().getValue() :
+                        o.getValue().getValue().getClass()
+                ).getSimpleName()));
 
         StringProperty databaseSearchTextProperty =
             botInterfaceProperty.get().getDatabaseSearchTextField().textProperty();
@@ -728,9 +542,11 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         return overlay;
     }
 
-    private TreeItem<Pair<Method, Object>> buildPseudoRootTreeItem(final String name,
+    private TreeItem<Pair<Method, Object>> buildPseudoRootTreeItem(
+        final String name,
         final Callable<Collection<?>> query, final StringProperty searchTextProperty,
-        final BooleanProperty searchRegexProperty) {
+        final BooleanProperty searchRegexProperty
+    ) {
         return new QueriableTreeItem<Pair<Method, Object>>(new Pair<>(null, name)) {
             @Override
             public List<TreeItem<Pair<Method, Object>>> query() {
@@ -1000,6 +816,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
     }*/
 
     private static final class RegexSearchPredicate implements Predicate<Pair<Method, Object>> {
+
         private final Pattern pattern;
         private final String methodName;
 
