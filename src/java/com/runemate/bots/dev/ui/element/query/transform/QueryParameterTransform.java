@@ -36,8 +36,8 @@ public abstract class QueryParameterTransform {
             return Collections.emptyList();
         }
 
-        final List<QueryParameterTransform> declared = Arrays.stream(type.getDeclaredMethods())
-            .filter(it -> type.equals(it.getReturnType()))
+        final List<QueryParameterTransform> declared = Arrays.stream(type.getMethods())
+            .filter(it -> it.getReturnType().isAssignableFrom(type))
             .filter(it -> it.getParameterCount() > 0)
             .filter(it -> {
                 final Class<?> pType = it.getParameterTypes()[0];

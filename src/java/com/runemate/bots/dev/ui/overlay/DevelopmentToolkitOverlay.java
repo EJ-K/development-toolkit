@@ -17,7 +17,6 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javafx.animation.AnimationTimer;
@@ -132,10 +131,6 @@ public class DevelopmentToolkitOverlay {
                             if (model == null) {
                                 continue;
                             }
-//                            final Rectangle bounds = model.getBounds();
-//                            if (bounds == null) {
-//                                continue;
-//                            }
                             final Paint color;
                             if (renderable instanceof Npc) {
                                 color = Color.DODGERBLUE;
