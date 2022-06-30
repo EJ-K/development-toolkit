@@ -74,8 +74,7 @@ public class DevelopmentToolkitOverlay {
 
     private class Overlay extends Stage {
 
-        private final ObservableMap<Integer, Shape> shapes =
-            FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
+        private final ObservableMap<Integer, Shape> shapes = FXCollections.synchronizedObservableMap(FXCollections.observableHashMap());
         private final DoubleProperty fpsProperty = new SimpleDoubleProperty(0L);
         private long lastTime = 0L;
 
@@ -188,6 +187,11 @@ public class DevelopmentToolkitOverlay {
 
                 } catch (ExecutionException | InterruptedException e) {
                     e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    stop();
+                    close();
+                    return;
                 }
                 fps();
             }

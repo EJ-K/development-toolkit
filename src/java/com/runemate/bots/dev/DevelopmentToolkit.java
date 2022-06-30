@@ -21,6 +21,7 @@ import com.runemate.game.api.hybrid.location.Area;
 import com.runemate.game.api.hybrid.location.*;
 import com.runemate.game.api.hybrid.location.navigation.*;
 import com.runemate.game.api.hybrid.net.*;
+import com.runemate.game.api.hybrid.projection.*;
 import com.runemate.game.api.hybrid.region.*;
 import com.runemate.game.api.hybrid.util.*;
 import com.runemate.game.api.osrs.local.*;
@@ -123,44 +124,36 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
             new Pair<>(Interfaces.class, "getLoaded"),
             new Pair<>(Interfaces.class, "getVisiblePredicate")
         ));
-        ReflectiveTreeItem.ALIASED_METHODS.addAll(Arrays.asList(
-            new Pair<>(
-                GameObject.class, new Pair<>(
-                DevelopmentToolkit.createSpoofedMethod(GameObject.class, "getName", String.class),
-                o -> {
-                    GameObjectDefinition god = null;
-                    String name = o instanceof GameObject
-                        && (god = ((GameObject) o).getDefinition()) != null ? god.getName() : null;
-                    if (Objects.equals("null", name)) {
-                        name = null;
-                    }
-                    if (name == null && god != null && (god = god.getLocalState()) != null) {
-                        name = god.getName();
-                    }
-                    if (Objects.equals("null", name)) {
-                        name = null;
-                    }
-                    return name;
-                }
-            )),
-            new Pair<>(
-                Npc.class, new Pair<>(
-                DevelopmentToolkit.createSpoofedMethod(Npc.class, "getName", String.class), npc -> {
-                NpcDefinition nd = null;
-                String name = npc instanceof Npc && (nd = ((Npc) npc).getDefinition()) != null ?
-                    nd.getName() : null;
+        ReflectiveTreeItem.ALIASED_METHODS.addAll(Arrays.asList(new Pair<>(
+            GameObject.class,
+            new Pair<>(DevelopmentToolkit.createSpoofedMethod(GameObject.class, "getName", String.class), o -> {
+                GameObjectDefinition god = null;
+                String name = o instanceof GameObject && (god = ((GameObject) o).getDefinition()) != null ? god.getName() : null;
                 if (Objects.equals("null", name)) {
                     name = null;
                 }
-                if (name == null && nd != null && (nd = nd.getLocalState()) != null) {
-                    name = nd.getName();
+                if (name == null && god != null && (god = god.getLocalState()) != null) {
+                    name = god.getName();
                 }
                 if (Objects.equals("null", name)) {
                     name = null;
                 }
                 return name;
-            }))
-        ));
+            })
+        ), new Pair<>(Npc.class, new Pair<>(DevelopmentToolkit.createSpoofedMethod(Npc.class, "getName", String.class), npc -> {
+            NpcDefinition nd = null;
+            String name = npc instanceof Npc && (nd = ((Npc) npc).getDefinition()) != null ? nd.getName() : null;
+            if (Objects.equals("null", name)) {
+                name = null;
+            }
+            if (name == null && nd != null && (nd = nd.getLocalState()) != null) {
+                name = nd.getName();
+            }
+            if (Objects.equals("null", name)) {
+                name = null;
+            }
+            return name;
+        }))));
 
         DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Point.class, o -> {
             Point p = (Point) o;
@@ -170,8 +163,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
             Color c = (Color) o;
             int alpha = c.getAlpha();
             if (alpha != 0xFF) {
-                return "Rgba(" + c.getRed() + ", " + c.getGreen() + ", " + c.getBlue() + ", "
-                    + alpha + ')';
+                return "Rgba(" + c.getRed() + ", " + c.getGreen() + ", " + c.getBlue() + ", " + alpha + ')';
             } else {
                 return "Rgb(" + c.getRed() + ", " + c.getGreen() + ", " + c.getBlue() + ')';
             }
@@ -194,12 +186,9 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final List<Renderable> renderables = Collections.synchronizedList(new ArrayList<>());
     private DevelopmentToolkitPage developmentToolkitPage;
-    private TreeItem<Pair<Method, Object>> grandExchangeTreeItem, chatboxTreeItem,
-        inventoryTreeItem,
-        moneyPouchTreeItem, skillTreeItem, varpTreeItem, animationTreeItem, hitsplatTreeItem,
-        equipmentTreeItem,
-        varbitTreeItem, playerMovementTreeItem, deathTreeItem, menuInteractionTreeItem,
-        targetTreeItem, projectileTreeItem;
+    private TreeItem<Pair<Method, Object>> grandExchangeTreeItem, chatboxTreeItem, inventoryTreeItem, moneyPouchTreeItem, skillTreeItem,
+        varpTreeItem, animationTreeItem, hitsplatTreeItem, equipmentTreeItem, varbitTreeItem, playerMovementTreeItem, deathTreeItem,
+        menuInteractionTreeItem, targetTreeItem, projectileTreeItem;
     private ObjectProperty<DevelopmentToolkitPage> botInterfaceProperty;
 
     public DevelopmentToolkit() {
@@ -219,25 +208,37 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
           byte[] parameterAnnotations,
           byte[] annotationDefault)
      */
-    public static Method createSpoofedMethod(
-        Class<?> declaringClass, String name,
-        Class<?> returnType
-    ) {
+    public static Method createSpoofedMethod(Class<?> declaringClass, String name, Class<?> returnType) {
         try {
-            Constructor<Method> methodConstructor =
-                Method.class.getDeclaredConstructor(Class.class, String.class, Class[].class,
-                    Class.class, Class[].class, int.class, int.class, String.class, byte[].class,
-                    byte[].class, byte[].class
-                );
+            Constructor<Method> methodConstructor = Method.class.getDeclaredConstructor(
+                Class.class,
+                String.class,
+                Class[].class,
+                Class.class,
+                Class[].class,
+                int.class,
+                int.class,
+                String.class,
+                byte[].class,
+                byte[].class,
+                byte[].class
+            );
             if (methodConstructor != null) {
                 boolean isAccessible = methodConstructor.isAccessible();
                 if (!isAccessible) {
                     methodConstructor.setAccessible(true);
                 }
-                Method method = methodConstructor.newInstance(declaringClass, name,
-                    DevelopmentToolkit.EMPTY_CLASS_ARRAY, returnType,
-                    DevelopmentToolkit.EMPTY_CLASS_ARRAY, Member.PUBLIC, -1, null,
-                    DevelopmentToolkit.EMPTY_BYTE_ARRAY, DevelopmentToolkit.EMPTY_BYTE_ARRAY,
+                Method method = methodConstructor.newInstance(
+                    declaringClass,
+                    name,
+                    DevelopmentToolkit.EMPTY_CLASS_ARRAY,
+                    returnType,
+                    DevelopmentToolkit.EMPTY_CLASS_ARRAY,
+                    Member.PUBLIC,
+                    -1,
+                    null,
+                    DevelopmentToolkit.EMPTY_BYTE_ARRAY,
+                    DevelopmentToolkit.EMPTY_BYTE_ARRAY,
                     DevelopmentToolkit.EMPTY_BYTE_ARRAY
                 );
                 if (!isAccessible) {
@@ -267,126 +268,161 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
             Execution.delay(100);
         }
         QueriableTreeItem.setExecutorService(executorService);
-        StringProperty entitiesSearchTextProperty =
-            botInterfaceProperty.get().getEntitiesSearchTextField().textProperty();
-        BooleanProperty entitiesSearchRegexProperty =
-            botInterfaceProperty.get().getEntitiesSearchRegexCheckBox().selectedProperty();
-        botInterfaceProperty().get().getEntitiesTreeTableView().getRoot().getChildren().setAll(
-            buildPseudoRootTreeItem(
-                Players.class.getSimpleName(), () -> Players.getLoaded().sortByDistance(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                Npcs.class.getSimpleName(), () -> Npcs.getLoaded().sortByDistance(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                GameObjects.class.getSimpleName(), () -> GameObjects.getLoaded().sortByDistance(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                SpotAnimations.class.getSimpleName(),
-                () -> SpotAnimations.getLoaded().sortByDistance(), entitiesSearchTextProperty,
-                entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                GroundItems.class.getSimpleName(), () -> GroundItems.getLoaded().sortByDistance(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                Projectiles.class.getSimpleName(), () -> Projectiles.getLoaded().sortByDistance(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                HintArrows.class.getSimpleName(), () -> HintArrows.getLoaded().sortByDistance(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                InterfaceContainers.class.getSimpleName(), InterfaceContainers::getLoaded,
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                InterfaceComponent.class.getSimpleName() + 's',
-                () -> Interfaces.newQuery().results(), entitiesSearchTextProperty,
-                entitiesSearchRegexProperty
-            ),
+        StringProperty entitiesSearchTextProperty = botInterfaceProperty.get().getEntitiesSearchTextField().textProperty();
+        BooleanProperty entitiesSearchRegexProperty = botInterfaceProperty.get().getEntitiesSearchRegexCheckBox().selectedProperty();
+        botInterfaceProperty().get()
+            .getEntitiesTreeTableView()
+            .getRoot()
+            .getChildren()
+            .setAll(
+                buildPseudoRootTreeItem(
+                    Players.class.getSimpleName(),
+                    () -> Players.getLoaded().sortByDistance(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Npcs.class.getSimpleName(),
+                    () -> Npcs.getLoaded().sortByDistance(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    GameObjects.class.getSimpleName(),
+                    () -> GameObjects.getLoaded().sortByDistance(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    SpotAnimations.class.getSimpleName(),
+                    () -> SpotAnimations.getLoaded().sortByDistance(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    GroundItems.class.getSimpleName(),
+                    () -> GroundItems.getLoaded().sortByDistance(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Projectiles.class.getSimpleName(),
+                    () -> Projectiles.getLoaded().sortByDistance(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    HintArrows.class.getSimpleName(),
+                    () -> HintArrows.getLoaded().sortByDistance(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    InterfaceContainers.class.getSimpleName(),
+                    InterfaceContainers::getLoaded,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    InterfaceComponent.class.getSimpleName() + 's',
+                    () -> Interfaces.newQuery().results(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
 
-            buildPseudoRootTreeItem(
-                Inventory.class.getSimpleName(), () -> Inventory.getItems().sortByIndex(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                Equipment.class.getSimpleName(), Equipment::getItems, entitiesSearchTextProperty,
-                entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                "Equipment Slots", () -> Arrays.asList(Equipment.Slot.values()),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                Bank.class.getSimpleName(), () -> Bank.getItems().sortByIndex(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                Shop.class.getSimpleName(), () -> Shop.getItems().sortByIndex(),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                "Incoming Trade", Trade.Incoming::getItems, entitiesSearchTextProperty,
-                entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                "Outgoing Trade", Trade.Outgoing::getItems, entitiesSearchTextProperty,
-                entitiesSearchRegexProperty
-            ),
+                buildPseudoRootTreeItem(
+                    Inventory.class.getSimpleName(),
+                    () -> Inventory.getItems().sortByIndex(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Equipment.class.getSimpleName(),
+                    Equipment::getItems,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    "Equipment Slots",
+                    () -> Arrays.asList(Equipment.Slot.values()),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Bank.class.getSimpleName(),
+                    () -> Bank.getItems().sortByIndex(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Shop.class.getSimpleName(),
+                    () -> Shop.getItems().sortByIndex(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    "Incoming Trade",
+                    Trade.Incoming::getItems,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    "Outgoing Trade",
+                    Trade.Outgoing::getItems,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
 
-            buildPseudoRootTreeItem(
-                Varps.class.getSimpleName(), Varps::getLoaded, entitiesSearchTextProperty,
-                entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                Quests.class.getSimpleName(), Quests::getAll, entitiesSearchTextProperty,
-                entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                SoundEffects.class.getSimpleName(), SoundEffects::getEmittingSoundEffects,
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                Skills.class.getSimpleName(), () -> Arrays.asList(Skill.values()),
-                entitiesSearchTextProperty, entitiesSearchRegexProperty
-            ),
-            buildPseudoRootTreeItem(
-                Worlds.class.getSimpleName(), Worlds::getLoaded, entitiesSearchTextProperty,
-                entitiesSearchRegexProperty
-            )
-        );
+                buildPseudoRootTreeItem(
+                    Varps.class.getSimpleName(),
+                    Varps::getLoaded,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Quests.class.getSimpleName(),
+                    Quests::getAll,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    SoundEffects.class.getSimpleName(),
+                    SoundEffects::getEmittingSoundEffects,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Skills.class.getSimpleName(),
+                    () -> Arrays.asList(Skill.values()),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Worlds.class.getSimpleName(),
+                    Worlds::getLoaded,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
+                )
+            );
         botInterfaceProperty().get().getEventsTreeTableView().getRoot().getChildren().setAll(
-            animationTreeItem =
-                new TreeItem<>(new Pair<>(null, AnimationListener.class.getSimpleName())),
-            grandExchangeTreeItem =
-                new TreeItem<>(new Pair<>(null, GrandExchangeListener.class.getSimpleName())),
-            chatboxTreeItem =
-                new TreeItem<>(new Pair<>(null, ChatboxListener.class.getSimpleName())),
-            inventoryTreeItem =
-                new TreeItem<>(new Pair<>(null, InventoryListener.class.getSimpleName())),
-            equipmentTreeItem =
-                new TreeItem<>(new Pair<>(null, EquipmentListener.class.getSimpleName())),
+            animationTreeItem = new TreeItem<>(new Pair<>(null, AnimationListener.class.getSimpleName())),
+            grandExchangeTreeItem = new TreeItem<>(new Pair<>(null, GrandExchangeListener.class.getSimpleName())),
+            chatboxTreeItem = new TreeItem<>(new Pair<>(null, ChatboxListener.class.getSimpleName())),
+            inventoryTreeItem = new TreeItem<>(new Pair<>(null, InventoryListener.class.getSimpleName())),
+            equipmentTreeItem = new TreeItem<>(new Pair<>(null, EquipmentListener.class.getSimpleName())),
             skillTreeItem = new TreeItem<>(new Pair<>(null, SkillListener.class.getSimpleName())),
             varpTreeItem = new TreeItem<>(new Pair<>(null, VarpListener.class.getSimpleName())),
             varbitTreeItem = new TreeItem<>(new Pair<>(null, VarbitListener.class.getSimpleName())),
             //varcTreeItem = new TreeItem<>(new Pair<>(null, VarcListener.class.getSimpleName())),
-            hitsplatTreeItem =
-                new TreeItem<>(new Pair<>(null, HitsplatListener.class.getSimpleName())),
-            playerMovementTreeItem =
-                new TreeItem<>(new Pair<>(null, PlayerMovementListener.class.getSimpleName())),
+            hitsplatTreeItem = new TreeItem<>(new Pair<>(null, HitsplatListener.class.getSimpleName())),
+            playerMovementTreeItem = new TreeItem<>(new Pair<>(null, PlayerMovementListener.class.getSimpleName())),
             deathTreeItem = new TreeItem<>(new Pair<>(null, DeathListener.class.getSimpleName())),
-            menuInteractionTreeItem =
-                new TreeItem<>(new Pair<>(null, MenuInteractionListener.class.getSimpleName())),
+            menuInteractionTreeItem = new TreeItem<>(new Pair<>(null, MenuInteractionListener.class.getSimpleName())),
             targetTreeItem = new TreeItem<>(new Pair<>(null, TargetListener.class.getSimpleName()))
         );
         botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().setAll(
-            new ReflectiveTreeItem.StaticReflectiveTreeItem(AccountInfo.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(
+                AccountInfo.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Bank.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Camera.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Chatbox.class),
@@ -411,7 +447,8 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Trade.class) {
                 @Override
                 public List<TreeItem<Pair<Method, Object>>> query() {
-                    final List<TreeItem<Pair<Method, Object>>> results =
+                    final List<TreeItem<Pair<Method, Object>>>
+                        results =
                         new ArrayList<>(Arrays.asList(
                             new StaticReflectiveTreeItem(Trade.Outgoing.class),
                             new StaticReflectiveTreeItem(Trade.Incoming.class)
@@ -423,88 +460,105 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Shop.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Traversal.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Wilderness.class),
-            new ReflectiveTreeItem.StaticReflectiveTreeItem(WorldHop.class)
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(WorldHop.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(Projection.class)
         );
         if (Environment.isOSRS()) {
-            botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().addAll(
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(Prayer.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(Magic.class) {
-                    @Override
-                    public List<TreeItem<Pair<Method, Object>>> query() {
-                        final List<TreeItem<Pair<Method, Object>>> results =
-                            new ArrayList<>(Arrays.asList(
-                                new StaticReflectiveTreeItem(Magic.Ancient.class),
+            botInterfaceProperty().get()
+                .getMiscTreeTableView()
+                .getRoot()
+                .getChildren()
+                .addAll(
+                    new ReflectiveTreeItem.StaticReflectiveTreeItem(Prayer.class),
+                    new ReflectiveTreeItem.StaticReflectiveTreeItem(Magic.class) {
+                        @Override
+                        public List<TreeItem<Pair<Method, Object>>> query() {
+                            final List<TreeItem<Pair<Method, Object>>> results = new ArrayList<>(Arrays.asList(
+                                new StaticReflectiveTreeItem(
+                                    Magic.Ancient.class),
                                 new StaticReflectiveTreeItem(Magic.Lunar.class),
                                 new StaticReflectiveTreeItem(Magic.Book.class)
                             ));
-                        results.addAll(super.query());
-                        return results;
-                    }
-                },
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(LootingBag.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(ControlPanelTab.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(OptionsTab.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(KourendHouseFavour.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(AchievementDiary.class),
-                new ReflectiveTreeItem.StaticReflectiveTreeItem(MakeAllInterface.class)
-            );
+                            results.addAll(super.query());
+                            return results;
+                        }
+                    },
+                    new ReflectiveTreeItem.StaticReflectiveTreeItem(LootingBag.class),
+                    new ReflectiveTreeItem.StaticReflectiveTreeItem(ControlPanelTab.class),
+                    new ReflectiveTreeItem.StaticReflectiveTreeItem(OptionsTab.class),
+                    new ReflectiveTreeItem.StaticReflectiveTreeItem(KourendHouseFavour.class),
+                    new ReflectiveTreeItem.StaticReflectiveTreeItem(AchievementDiary.class),
+                    new ReflectiveTreeItem.StaticReflectiveTreeItem(MakeAllInterface.class)
+                );
         }
-        botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().sort(
-            Comparator.comparing(
-                o -> (
-                    (o.getValue().getValue() instanceof Class) ? (Class) o.getValue().getValue() :
-                        o.getValue().getValue().getClass()
-                ).getSimpleName()));
+        botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().sort(Comparator.comparing(o -> (
+            (o.getValue().getValue() instanceof Class) ? (Class) o.getValue().getValue() : o.getValue().getValue().getClass()
+        ).getSimpleName()));
 
-        StringProperty databaseSearchTextProperty =
-            botInterfaceProperty.get().getDatabaseSearchTextField().textProperty();
-        BooleanProperty databaseSearchRegexProperty =
-            botInterfaceProperty.get().getDatabaseSearchRegexCheckBox().selectedProperty();
-        botInterfaceProperty().get().getDatabaseTreeTableView().getRoot().getChildren()
-            .setAll(Arrays.asList(
-                buildPseudoRootTreeItem(
-                    GameObjectDefinition.class.getSimpleName() + 's', GameObjectDefinition::loadAll,
-                    databaseSearchTextProperty, databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    ItemDefinition.class.getSimpleName() + 's',
-                    () -> ItemDefinition.get(0, 100_000), databaseSearchTextProperty,
-                    databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    NpcDefinition.class.getSimpleName() + 's', () -> NpcDefinition.get(0, 50000),
-                    databaseSearchTextProperty, databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    SpotAnimationDefinitions.class.getSimpleName(),
-                    SpotAnimationDefinitions::loadAll, databaseSearchTextProperty,
-                    databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    EnumDefinitions.class.getSimpleName(), EnumDefinitions::loadAll,
-                    databaseSearchTextProperty, databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    OverlayDefinitions.class.getSimpleName(), OverlayDefinitions::loadAll,
-                    databaseSearchTextProperty, databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    UnderlayDefinitions.class.getSimpleName(), UnderlayDefinitions::loadAll,
-                    databaseSearchTextProperty, databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    Materials.class.getSimpleName(), Materials::loadAll, databaseSearchTextProperty,
-                    databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    IdentityKits.class.getSimpleName(), IdentityKits::loadAll,
-                    databaseSearchTextProperty, databaseSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    Varbits.class.getSimpleName(), Varbits::loadAll, databaseSearchTextProperty,
-                    databaseSearchRegexProperty
-                )
-            ));
+        StringProperty databaseSearchTextProperty = botInterfaceProperty.get().getDatabaseSearchTextField().textProperty();
+        BooleanProperty databaseSearchRegexProperty = botInterfaceProperty.get().getDatabaseSearchRegexCheckBox().selectedProperty();
+        botInterfaceProperty().get().getDatabaseTreeTableView().getRoot().getChildren().setAll(Arrays.asList(
+            buildPseudoRootTreeItem(
+                GameObjectDefinition.class.getSimpleName() + 's',
+                GameObjectDefinition::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                ItemDefinition.class.getSimpleName() + 's',
+                () -> ItemDefinition.get(0, 100_000),
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                NpcDefinition.class.getSimpleName() + 's',
+                () -> NpcDefinition.get(0, 50000),
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                SpotAnimationDefinitions.class.getSimpleName(),
+                SpotAnimationDefinitions::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                EnumDefinitions.class.getSimpleName(),
+                EnumDefinitions::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                OverlayDefinitions.class.getSimpleName(),
+                OverlayDefinitions::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                UnderlayDefinitions.class.getSimpleName(),
+                UnderlayDefinitions::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                Materials.class.getSimpleName(),
+                Materials::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                IdentityKits.class.getSimpleName(),
+                IdentityKits::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                Varbits.class.getSimpleName(),
+                Varbits::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            )
+        ));
         setLoopDelay(2000);
         getEventDispatcher().addListener(this);
 
@@ -544,16 +598,18 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
 
     private TreeItem<Pair<Method, Object>> buildPseudoRootTreeItem(
         final String name,
-        final Callable<Collection<?>> query, final StringProperty searchTextProperty,
+        final Callable<Collection<?>> query,
+        final StringProperty searchTextProperty,
         final BooleanProperty searchRegexProperty
     ) {
         return new QueriableTreeItem<Pair<Method, Object>>(new Pair<>(null, name)) {
             @Override
             public List<TreeItem<Pair<Method, Object>>> query() {
                 String searchText = searchTextProperty != null ? searchTextProperty.get() : null;
-                Predicate<Pair<Method, Object>> filter =
-                    searchText != null && !searchText.isEmpty() ?
-                        new RegexSearchPredicate(searchRegexProperty, searchText) : null;
+                Predicate<Pair<Method, Object>> filter = searchText != null && !searchText.isEmpty() ? new RegexSearchPredicate(
+                    searchRegexProperty,
+                    searchText
+                ) : null;
                 Predicate<ReflectiveTreeItem> treeItemPredicate = parent -> {
                     if (parent.getValue() == null) {
                         return false;
@@ -562,12 +618,15 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
                         return true;
                     }
                     List<TreeItem<Pair<Method, Object>>> children = parent.query();
-                    return children != null && children.stream().anyMatch(
-                        child -> child.getValue() != null && filter.test(child.getValue()));
+                    return children != null && children.stream().anyMatch(child -> child.getValue() != null
+                        && filter.test(child.getValue()));
                 };
                 try {
-                    return query.call().stream().map(i -> new ReflectiveTreeItem(null, i))
-                        .filter(treeItemPredicate).collect(Collectors.toList());
+                    return query.call()
+                        .stream()
+                        .map(i -> new ReflectiveTreeItem(null, i))
+                        .filter(treeItemPredicate)
+                        .collect(Collectors.toList());
                 } catch (Exception e) {
                     System.err.println("Point B Thread: " + Thread.currentThread().getName());
                     e.printStackTrace();
@@ -584,7 +643,40 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
 
     @Override
     public void onLoop() {
+        setLoopDelay(50);
+        try {
+            final Function<TreeTablePosition<Pair<Method, Object>, ?>, Object> mapper = it -> {
+                final TreeItem<Pair<Method, Object>> item = it.getTreeItem();
+                final Pair<Method, Object> pair;
+                return item == null ? null : (pair = item.getValue()) == null ? null : pair.getValue();
+            };
+            Stream<Object> stream = developmentToolkitPage.getEntitiesTreeTableView().getSelectionModel().getSelectedCells().stream().map(
+                mapper);
 
+            stream = Stream.concat(
+                stream,
+                developmentToolkitPage.getMiscTreeTableView().getSelectionModel().getSelectedCells().stream().map(mapper)
+            );
+
+            final TreeTableView<Pair<Method, Object>> query = developmentToolkitPage.getQueryTreeView();
+            if (query != null) {
+                stream = Stream.concat(
+                    stream,
+                    developmentToolkitPage.getQueryTreeView().getSelectionModel().getSelectedCells().stream().map(mapper)
+                );
+            }
+
+            if (developmentToolkitPage.hoverMouseOveroverProperty().get()) {
+                final List<Entity> hovered = Region.getHoveredEntities();
+                stream = hovered == null ? stream : Stream.concat(stream, hovered.stream());
+            }
+
+            renderables.clear();
+            stream.filter(it -> Objects.nonNull(it) && it instanceof Renderable).map(it -> (Renderable) it).collect(Collectors.toCollection(
+                () -> renderables));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public List<Renderable> getRenderables() {
@@ -596,8 +688,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> chatboxTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> chatboxTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -605,8 +696,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> moneyPouchTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> moneyPouchTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -614,8 +704,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -623,8 +712,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -632,8 +720,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -641,8 +728,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -650,8 +736,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -659,8 +744,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -668,8 +752,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> varpTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> varpTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -677,8 +760,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(() -> varbitTreeItem.getChildren()
-            .add(new ReflectiveTreeItem(null, new VarbitEventWrapper(event))));
+        Platform.runLater(() -> varbitTreeItem.getChildren().add(new ReflectiveTreeItem(null, new VarbitEventWrapper(event))));
     }
 
     @Override
@@ -686,8 +768,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> grandExchangeTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> grandExchangeTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -695,8 +776,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> animationTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> animationTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -704,8 +784,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> hitsplatTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> hitsplatTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -713,8 +792,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> deathTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> deathTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -722,8 +800,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> menuInteractionTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> menuInteractionTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -731,8 +808,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> playerMovementTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> playerMovementTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -740,8 +816,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> targetTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> targetTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
@@ -749,54 +824,12 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(
-            () -> projectileTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+        Platform.runLater(() -> projectileTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
     }
 
     @Override
     public void onCycleStart() {
-        try {
-            final Function<TreeTablePosition<Pair<Method, Object>, ?>, Object> mapper = it -> {
-                final TreeItem<Pair<Method, Object>> item = it.getTreeItem();
-                final Pair<Method, Object> pair;
-                return item == null ? null : (pair = item.getValue()) == null ? null : pair.getValue();
-            };
-            Stream<Object> stream = developmentToolkitPage.getEntitiesTreeTableView()
-                .getSelectionModel()
-                .getSelectedCells().stream()
-                .map(mapper);
 
-            stream = Stream.concat(
-                stream,
-                developmentToolkitPage.getMiscTreeTableView()
-                    .getSelectionModel()
-                    .getSelectedCells().stream()
-                    .map(mapper)
-            );
-
-            final TreeTableView<Pair<Method, Object>> query = developmentToolkitPage.getQueryTreeView();
-            if (query != null) {
-                stream = Stream.concat(
-                    stream,
-                    developmentToolkitPage.getQueryTreeView()
-                        .getSelectionModel()
-                        .getSelectedCells().stream()
-                        .map(mapper)
-                );
-            }
-
-            if (developmentToolkitPage.hoverMouseOveroverProperty().get()) {
-                final List<Entity> hovered = Region.getHoveredEntities();
-                stream = hovered == null ? stream : Stream.concat(stream, hovered.stream());
-            }
-
-            renderables.clear();
-            stream.filter(it -> Objects.nonNull(it) && it instanceof Renderable)
-                .map(it -> (Renderable) it)
-                .collect(Collectors.toCollection(() -> renderables));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /*@Override
@@ -822,11 +855,8 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
 
         private RegexSearchPredicate(BooleanProperty searchRegexProperty, String searchText) {
             boolean searchHasMethodName = searchText.indexOf('=') != -1;
-            methodName =
-                searchHasMethodName ? searchText.substring(0, searchText.indexOf('=')) : null;
-            pattern = Pattern.compile(
-                searchRegexProperty != null && searchRegexProperty.get() ? searchText :
-                    ".*" + searchText + ".*");
+            methodName = searchHasMethodName ? searchText.substring(0, searchText.indexOf('=')) : null;
+            pattern = Pattern.compile(searchRegexProperty != null && searchRegexProperty.get() ? searchText : ".*" + searchText + ".*");
         }
 
         @Override
@@ -839,9 +869,8 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
                     return false;
                 }
             }
-            return pattern.matcher(
-                (!Objects.requireNonNull(this.methodName).isEmpty() ? methodName + '=' : "")
-                    + DevelopmentToolkitPage.cleanToString(pair.getValue())).matches();
+            return pattern.matcher((!Objects.requireNonNull(this.methodName).isEmpty() ? methodName + '=' : "")
+                + DevelopmentToolkitPage.cleanToString(pair.getValue())).matches();
         }
     }
 }

@@ -1,13 +1,10 @@
 package com.runemate.bots.dev.ui;
 
-import javafx.scene.Node;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TreeItem;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
-
-import java.util.List;
-import java.util.concurrent.ExecutorService;
+import java.util.*;
+import java.util.concurrent.*;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 /**
  * Created by I on 1/23/2016.

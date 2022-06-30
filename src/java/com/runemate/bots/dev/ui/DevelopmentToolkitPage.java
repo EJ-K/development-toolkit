@@ -1,78 +1,48 @@
 package com.runemate.bots.dev.ui;
 
-import com.runemate.bots.dev.DevelopmentToolkit;
-import com.runemate.bots.dev.ui.element.query.QueryBuilderExtension;
-import com.runemate.bots.ui.util.VerticalDragResizerUtil;
-import com.runemate.bots.util.ClassUtil;
-import com.runemate.game.api.hybrid.util.Resources;
-import com.runemate.ui.control.ToggleSwitch;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.function.Function;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.Label;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TitledPane;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeTableColumn;
-import javafx.scene.control.TreeTableView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.util.Callback;
-import javafx.util.Pair;
+import com.runemate.bots.dev.*;
+import com.runemate.bots.dev.ui.element.query.*;
+import com.runemate.bots.ui.util.*;
+import com.runemate.bots.util.*;
+import com.runemate.game.api.hybrid.util.*;
+import com.runemate.ui.control.*;
+import java.io.*;
+import java.lang.reflect.*;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.*;
+import javafx.beans.property.*;
+import javafx.beans.value.*;
+import javafx.fxml.*;
+import javafx.geometry.*;
+import javafx.scene.*;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.*;
+import javafx.stage.*;
+import javafx.util.*;
 
 public class DevelopmentToolkitPage extends VBox implements Initializable {
 
-    public static final Map<Class<?>, Function<Object, String>> OVERRIDDEN_TO_STRINGS =
-        new HashMap<>(5);
-    public static final ObservableValue<String> NULL_STRING_PROPERTY =
-        new SimpleStringProperty("null"), EMPTY_STRING_PROPERTY = new SimpleStringProperty("empty");
-    public static final ObservableValue<Node> NULL_NODE_VALUE =
-        new SimpleObjectProperty<>(new Text("null"));
+    public static final Map<Class<?>, Function<Object, String>> OVERRIDDEN_TO_STRINGS = new HashMap<>(5);
+    public static final ObservableValue<String> NULL_STRING_PROPERTY = new SimpleStringProperty("null"),
+        EMPTY_STRING_PROPERTY =
+            new SimpleStringProperty("empty");
+    public static final ObservableValue<Node> NULL_NODE_VALUE = new SimpleObjectProperty<>(new Text("null"));
     private final DevelopmentToolkit bot;
     @FXML
-    private VBox entitiesTableViewContainer, eventsTableViewContainer, miscTableViewContainer,
-        databaseTableViewContainer, toggleSwitchContainer;
+    private VBox entitiesTableViewContainer, eventsTableViewContainer, miscTableViewContainer, databaseTableViewContainer,
+        toggleSwitchContainer;
     @FXML
-    private TreeTableView<Pair<Method, Object>> entitiesTreeTableView, eventsTreeTableView,
-        miscTreeTableView, databaseTreeTableView;
+    private TreeTableView<Pair<Method, Object>> entitiesTreeTableView, eventsTreeTableView, miscTreeTableView, databaseTreeTableView;
     @FXML
-    private TreeTableColumn<Pair<Method, Object>, String> entityValueTreeTableColumn,
-        entityCommentTreeTableColumn,
-        eventValueTreeTableColumn, eventCommentTreeTableColumn, miscValueTreeTableColumn,
-        miscCommentTreeTableColumn,
+    private TreeTableColumn<Pair<Method, Object>, String> entityValueTreeTableColumn, entityCommentTreeTableColumn,
+        eventValueTreeTableColumn, eventCommentTreeTableColumn, miscValueTreeTableColumn, miscCommentTreeTableColumn,
         databaseValueTreeTableColumn, databaseCommentTreeTableColumn;
     @FXML
-    private TreeTableColumn<Pair<Method, Object>, Node> entityObjectTreeTableColumn,
-        eventObjectTreeTableColumn, miscObjectTreeTableColumn, databaseObjectTreeTableColumn;
+    private TreeTableColumn<Pair<Method, Object>, Node> entityObjectTreeTableColumn, eventObjectTreeTableColumn, miscObjectTreeTableColumn,
+        databaseObjectTreeTableColumn;
     @FXML
     private TitledPane entitiesTitledPane, eventsTitledPane, miscTitledPane, databaseTitledPane;
     @FXML
@@ -87,8 +57,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
     private QueryBuilderExtension queryBuilderExtension;
 
     public DevelopmentToolkitPage(DevelopmentToolkit bot) throws IOException {
-        InputStream fxmlInputStream =
-            Resources.getAsStream("fxml/DevelopmentToolkitPage.fxml");
+        InputStream fxmlInputStream = Resources.getAsStream("fxml/DevelopmentToolkitPage.fxml");
         this.bot = bot;
         final FXMLLoader loader = new FXMLLoader();
         loader.setController(this);
@@ -119,9 +88,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
     }
 
     public static String cleanToString(Object o) {
-        return o != null ? DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.getOrDefault(o.getClass(),
-            Object::toString
-        ).apply(o) : null;
+        return o != null ? DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.getOrDefault(o.getClass(), Object::toString).apply(o) : null;
     }
 
     public ReadOnlyBooleanProperty hoverMouseOveroverProperty() {
@@ -150,33 +117,28 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
         hoverLabel.setContentDisplay(ContentDisplay.LEFT);
         toggleSwitchContainer.getChildren().addAll(hoverLabel);
 
-        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, Node>, ObservableValue<Node>>
-            objectCallback = param -> {
+        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, Node>, ObservableValue<Node>> objectCallback = param -> {
             Pair<Method, Object> vv = param.getValue().getValue();
             if (vv.getKey() == null) {
                 if (vv.getValue() == null) {
                     return DevelopmentToolkitPage.NULL_NODE_VALUE;
                 }
                 if (Map.Entry.class.isAssignableFrom(vv.getValue().getClass())) {
-                    return new SimpleObjectProperty<>(new Text(
-                        DevelopmentToolkitPage.optionallyThreadedCall(
-                            () -> DevelopmentToolkitPage.cleanToString(
-                                ((Map.Entry<?, ?>) vv.getValue()).getKey()))));
+                    return new SimpleObjectProperty<>(new Text(DevelopmentToolkitPage.optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(
+                        ((Map.Entry<?, ?>) vv.getValue()).getKey()))));
                 }
                 if (vv.getValue() instanceof Class) {
-                    return new SimpleObjectProperty<>(
-                        new Text(((Class) vv.getValue()).getSimpleName()));
+                    return new SimpleObjectProperty<>(new Text(((Class) vv.getValue()).getSimpleName()));
                 }
-                return new SimpleObjectProperty<>(new Text(
-                    DevelopmentToolkitPage.optionallyThreadedCall(
-                        () -> DevelopmentToolkitPage.cleanToString(vv.getValue()))));
+                return new SimpleObjectProperty<>(new Text(DevelopmentToolkitPage.optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(
+                    vv.getValue()))));
             }
             final Text typeText = new Text(vv.getKey().getReturnType().getSimpleName());
-            typeText.getStyleClass().addAll("type",
-                "type-" + (ClassUtil.isPrimitiveOrWrapper(vv.getKey().getReturnType()) ?
-                    "primitive" :
-                    Integer.toString(vv.getKey().getReturnType().getSimpleName().charAt(0) % 16))
-            );
+            typeText.getStyleClass().addAll("type", "type-" + (
+                ClassUtil.isPrimitiveOrWrapper(vv.getKey().getReturnType())
+                    ? "primitive"
+                    : Integer.toString(vv.getKey().getReturnType().getSimpleName().charAt(0) % 16)
+            ));
             final Text spaceText = new Text(" ");
             final Text nameText = new Text(vv.getKey().getName());
             // tried TextFlow but couldn't use it due to internal bug with TableViews and TextFlows :(
@@ -185,15 +147,12 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
             return new SimpleObjectProperty<>(hbox);
             //return new SimpleObjectProperty<>(new Text(vv.getKey().getReturnType().getSimpleName() + " " + vv.getKey().getName()));
         };
-        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, String>, ObservableValue<String>>
-            valueCallback = param -> {
+        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, String>, ObservableValue<String>> valueCallback = param -> {
             Pair<Method, Object> vv = param.getValue().getValue();
             if (vv.getKey() == null) {
-                if (vv.getValue() != null && Map.Entry.class.isAssignableFrom(
-                    vv.getValue().getClass())) {
-                    return new SimpleStringProperty(DevelopmentToolkitPage.optionallyThreadedCall(
-                        () -> DevelopmentToolkitPage.cleanToString(
-                            ((Map.Entry<?, ?>) vv.getValue()).getValue())));
+                if (vv.getValue() != null && Map.Entry.class.isAssignableFrom(vv.getValue().getClass())) {
+                    return new SimpleStringProperty(DevelopmentToolkitPage.optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(
+                        ((Map.Entry<?, ?>) vv.getValue()).getValue())));
                 }
                 return null;
             }
@@ -220,11 +179,9 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
                 }
                 return null;
             }
-            return new SimpleStringProperty(DevelopmentToolkitPage.optionallyThreadedCall(
-                () -> DevelopmentToolkitPage.cleanToString(vv.getValue())));
+            return new SimpleStringProperty(DevelopmentToolkitPage.optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(vv.getValue())));
         };
-        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, String>, ObservableValue<String>>
-            commentCallback = param -> {
+        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, String>, ObservableValue<String>> commentCallback = param -> {
             Object object = param.getValue().getValue().getValue();
             if (object == null) {
                 return null;
@@ -236,8 +193,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
         // ENTITIES
 
         VerticalDragResizerUtil.makeResizable(entitiesTableViewContainer, 6);
-        entitiesTableViewContainer.maxHeightProperty()
-            .bind(entitiesTableViewContainer.minHeightProperty());
+        entitiesTableViewContainer.maxHeightProperty().bind(entitiesTableViewContainer.minHeightProperty());
         entitiesTreeTableView.setRoot(new TreeItem<>(new Pair<>(null, null)));
         entitiesTreeTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
@@ -254,8 +210,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
         // EVENTS
 
         VerticalDragResizerUtil.makeResizable(eventsTableViewContainer, 6);
-        eventsTableViewContainer.maxHeightProperty()
-            .bindBidirectional(eventsTableViewContainer.minHeightProperty());
+        eventsTableViewContainer.maxHeightProperty().bindBidirectional(eventsTableViewContainer.minHeightProperty());
         eventsTreeTableView.setRoot(new TreeItem<>(new Pair<>(null, null)));
 
         eventObjectTreeTableColumn.setCellValueFactory(objectCallback);
@@ -271,8 +226,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
         // MISC
 
         VerticalDragResizerUtil.makeResizable(miscTableViewContainer, 6);
-        miscTableViewContainer.maxHeightProperty()
-            .bindBidirectional(miscTableViewContainer.minHeightProperty());
+        miscTableViewContainer.maxHeightProperty().bindBidirectional(miscTableViewContainer.minHeightProperty());
         miscTreeTableView.setRoot(new TreeItem<>(new Pair<>(null, null)));
 
         miscObjectTreeTableColumn.setCellValueFactory(objectCallback);
@@ -289,8 +243,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
         // DATABASE
 
         VerticalDragResizerUtil.makeResizable(databaseTableViewContainer, 6);
-        databaseTableViewContainer.maxHeightProperty()
-            .bindBidirectional(databaseTableViewContainer.minHeightProperty());
+        databaseTableViewContainer.maxHeightProperty().bindBidirectional(databaseTableViewContainer.minHeightProperty());
         databaseTreeTableView.setRoot(new TreeItem<>(new Pair<>(null, null)));
 
         databaseObjectTreeTableColumn.setCellValueFactory(objectCallback);
