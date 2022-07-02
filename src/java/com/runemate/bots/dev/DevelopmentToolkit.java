@@ -562,12 +562,10 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         setLoopDelay(2000);
         getEventDispatcher().addListener(this);
 
-        overlay.start();
     }
 
     @Override
     public void onStop() {
-        overlay.hide();
         Platform.runLater(() -> {
             botInterfaceProperty().get().getEntitiesTreeTableView().setRoot(null);
             botInterfaceProperty().get().getEventsTreeTableView().setRoot(null);
@@ -575,6 +573,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
             botInterfaceProperty().get().getDatabaseTreeTableView().setRoot(null);
             botInterfaceProperty().get().setDisable(true);
             executorService.shutdown();
+            overlay.destroy();
         });
     }
 
@@ -666,7 +665,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
                 );
             }
 
-            if (developmentToolkitPage.hoverMouseOveroverProperty().get()) {
+            if (developmentToolkitPage.hoverMouseOverProperty().get()) {
                 final List<Entity> hovered = Region.getHoveredEntities();
                 stream = hovered == null ? stream : Stream.concat(stream, hovered.stream());
             }

@@ -52,7 +52,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
     @FXML
     private Button qbButton;
 
-    private ToggleSwitch hoverSwitch;
+    private ToggleSwitch hoverSwitch, overlaySwitch;
 
     private QueryBuilderExtension queryBuilderExtension;
 
@@ -91,7 +91,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
         return o != null ? DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.getOrDefault(o.getClass(), Object::toString).apply(o) : null;
     }
 
-    public ReadOnlyBooleanProperty hoverMouseOveroverProperty() {
+    public ReadOnlyBooleanProperty hoverMouseOverProperty() {
         return hoverSwitch == null ? new SimpleBooleanProperty(false) : hoverSwitch.selectedProperty();
     }
 
@@ -113,9 +113,17 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
         });
 
         hoverSwitch = new ToggleSwitch(false);
-        final Label hoverLabel = new Label("Enable mouseover Highlight", hoverSwitch);
+        final Label hoverLabel = new Label("Enable Mouseover Highlight", hoverSwitch);
         hoverLabel.setContentDisplay(ContentDisplay.LEFT);
         toggleSwitchContainer.getChildren().addAll(hoverLabel);
+
+        overlaySwitch = new ToggleSwitch(false);
+        final Label overlayLabel = new Label("Enable Overlay", overlaySwitch);
+        overlayLabel.setContentDisplay(ContentDisplay.LEFT);
+        toggleSwitchContainer.getChildren().addAll(overlayLabel);
+
+        overlaySwitch.selectedProperty().bindBidirectional(bot.getOverlay().showingProperty());
+        overlaySwitch.setSelected(true);
 
         final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, Node>, ObservableValue<Node>> objectCallback = param -> {
             Pair<Method, Object> vv = param.getValue().getValue();

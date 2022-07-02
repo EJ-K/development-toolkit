@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
@@ -46,8 +45,17 @@ public class DevelopmentToolkitOverlay {
     private Rectangle lastBounds;
     private Point lastLoc;
 
+    private final BooleanProperty showing = new SimpleBooleanProperty(false);
+
     public DevelopmentToolkitOverlay(final DevelopmentToolkit bot) {
         this.bot = bot;
+        showing.addListener((obs, old, show) -> {
+            if (show) {
+                start();
+            } else {
+                close();
+            }
+        });
     }
 
     private static double[] convert(@Nonnull int[] ints) {
@@ -58,18 +66,32 @@ public class DevelopmentToolkitOverlay {
         return doubles;
     }
 
-    public void start() {
+    public BooleanProperty showingProperty() {
+        return showing;
+    }
+
+    public boolean isShowing() {
+        return showing.get();
+    }
+
+    private void start() {
         Platform.runLater(() -> {
             impl = new Overlay();
             impl.start();
         });
     }
 
-    public void hide() {
+    public void close() {
         Platform.runLater(() -> {
-            impl.close();
-            impl = null;
+            if (impl != null) {
+                impl.close();
+                impl = null;
+            }
         });
+    }
+
+    public void destroy() {
+        Platform.runLater(() -> showing.set(false));
     }
 
     private class Overlay extends Stage {
