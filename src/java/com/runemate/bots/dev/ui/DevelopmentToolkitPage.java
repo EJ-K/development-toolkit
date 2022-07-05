@@ -132,14 +132,13 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
                     return DevelopmentToolkitPage.NULL_NODE_VALUE;
                 }
                 if (Map.Entry.class.isAssignableFrom(vv.getValue().getClass())) {
-                    return new SimpleObjectProperty<>(new Text(DevelopmentToolkitPage.optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(
+                    return new SimpleObjectProperty<>(new Text(optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(
                         ((Map.Entry<?, ?>) vv.getValue()).getKey()))));
                 }
                 if (vv.getValue() instanceof Class) {
                     return new SimpleObjectProperty<>(new Text(((Class) vv.getValue()).getSimpleName()));
                 }
-                return new SimpleObjectProperty<>(new Text(DevelopmentToolkitPage.optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(
-                    vv.getValue()))));
+                return new SimpleObjectProperty<>(new Text(optionallyThreadedCall(() -> cleanToString(vv.getValue()))));
             }
             final Text typeText = new Text(vv.getKey().getReturnType().getSimpleName());
             typeText.getStyleClass().addAll("type", "type-" + (

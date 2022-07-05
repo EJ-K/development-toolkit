@@ -6,6 +6,7 @@ import com.runemate.bots.dev.ui.overlay.*;
 import com.runemate.game.api.client.embeddable.*;
 import com.runemate.game.api.hybrid.*;
 import com.runemate.game.api.hybrid.cache.configs.*;
+import com.runemate.game.api.hybrid.cache.elements.*;
 import com.runemate.game.api.hybrid.cache.materials.*;
 import com.runemate.game.api.hybrid.entities.*;
 import com.runemate.game.api.hybrid.entities.definitions.*;
@@ -179,6 +180,39 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Rectangle2D.Double.class, o -> {
             Rectangle2D.Double rd = (Rectangle2D.Double) o;
             return "Rectangle2D(" + rd.x + ", " + rd.y + ", " + rd.width + ", " + rd.height + ')';
+        });
+        DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(CacheQuestDefinition.class, o -> {
+            CacheQuestDefinition def = (CacheQuestDefinition) o;
+            return def.getDisplayName();
+        });
+        DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Varbit.class, o -> {
+            Varbit def = (Varbit) o;
+            VarbitID known = VarbitID.byId(def.getId());
+            if (known != null) {
+                return String.format("Varbit %s [%s]", def.getId(), known.name());
+            }
+            return String.format("Varbit %s", def.getId());
+        });
+        DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Varp.class, o -> {
+            Varp def = (Varp) o;
+            VarpID known = VarpID.byId(def.getIndex());
+            if (known != null) {
+                return String.format("Varp %s [%s]", def.getIndex(), known.name());
+            }
+            return String.format("Varp %s", def.getIndex());
+        });
+        DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(OSRSInterfaceContainer.class, o -> {
+            InterfaceContainer def = (InterfaceContainer) o;
+            InterfaceContainerID known = InterfaceContainerID.byId(def.getIndex());
+            if (known != null) {
+                return String.format("InterfaceContainer %s [%s]", def.getIndex(), known.name());
+            }
+            return String.format("InterfaceContainer %s", def.getIndex());
+        });
+        DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Quest.OSRS.class, o -> {
+            Quest q = (Quest) o;
+            QuestDefinition def = q.getDefinition();
+            return def == null ? q.getName() : def.getDisplayName();
         });
     }
 
@@ -555,6 +589,12 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
             buildPseudoRootTreeItem(
                 Varbits.class.getSimpleName(),
                 Varbits::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                QuestDefinitions.class.getSimpleName(),
+                QuestDefinitions::loadAll,
                 databaseSearchTextProperty,
                 databaseSearchRegexProperty
             )

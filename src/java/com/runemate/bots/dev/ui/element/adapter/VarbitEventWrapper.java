@@ -30,7 +30,7 @@ public class VarbitEventWrapper {
     @Override
     public String toString() {
         String result = event.toString();
-        final Varbits v = Varbits.of(event.getVarbit().getId());
+        final VarbitID v = VarbitID.byId(event.getVarbit().getId());
         if (v != null) {
             result += " [" + v.name() + "]";
         }

@@ -1,6 +1,6 @@
 package com.runemate.bots.dev.ui.element.adapter;
 
-public enum Varbits {
+public enum VarbitID {
     /*
      * If chatbox is transparent or not
      */
@@ -629,12 +629,12 @@ public enum Varbits {
      */
     private final int id;
 
-    Varbits(final int id) {
+    VarbitID(final int id) {
         this.id = id;
     }
 
-    public static Varbits of(int id) {
-        for (Varbits v : values()) {
+    public static VarbitID byId(int id) {
+        for (VarbitID v : values()) {
             if (v.id == id) {
                 return v;
             }
