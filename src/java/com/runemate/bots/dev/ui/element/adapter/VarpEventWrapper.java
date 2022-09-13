@@ -1,21 +1,21 @@
 package com.runemate.bots.dev.ui.element.adapter;
 
 import com.runemate.game.api.hybrid.local.*;
-import com.runemate.game.api.script.framework.listeners.events.VarbitEvent;
+import com.runemate.game.api.script.framework.listeners.events.*;
 import java.util.*;
 
-public class VarbitEventWrapper {
+public class VarpEventWrapper {
 
-    private final VarbitEvent event;
+    private final VarpEvent event;
 
-    public VarbitEventWrapper(final VarbitEvent event) {
+    public VarpEventWrapper(final VarpEvent event) {
         this.event = event;
     }
 
     @Override
     public String toString() {
         String result = event.toString();
-        final VarbitID v = Arrays.stream(VarbitID.values()).filter(it -> it.getId() == event.getVarbit().getId()).findAny().orElse(null);
+        final VarpID v = Arrays.stream(VarpID.values()).filter(it -> it.getId() == event.getVarp().getIndex()).findAny().orElse(null);
         if (v != null) {
             result += " [" + v.name() + "]";
         }

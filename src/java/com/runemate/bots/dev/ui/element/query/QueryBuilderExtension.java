@@ -1,81 +1,42 @@
 package com.runemate.bots.dev.ui.element.query;
 
-import static com.runemate.bots.dev.ui.DevelopmentToolkitPage.cleanToString;
-import static com.runemate.bots.dev.ui.DevelopmentToolkitPage.optionallyThreadedCall;
+import static com.runemate.bots.dev.ui.DevelopmentToolkitPage.*;
 
-import com.runemate.bots.dev.DevelopmentToolkit;
-import com.runemate.bots.dev.ui.DevelopmentToolkitPage;
-import com.runemate.bots.dev.ui.QueriableTreeItem;
-import com.runemate.bots.dev.ui.ReflectiveTreeItem;
-import com.runemate.bots.dev.ui.element.query.transform.QueryBuilderTransform;
-import com.runemate.bots.util.ClassUtil;
-import com.runemate.game.api.hybrid.entities.GameObject;
-import com.runemate.game.api.hybrid.local.hud.interfaces.InterfaceComponent;
-import com.runemate.game.api.hybrid.local.hud.interfaces.Interfaces;
-import com.runemate.game.api.hybrid.queries.GameObjectQueryBuilder;
-import com.runemate.game.api.hybrid.queries.GroundItemQueryBuilder;
-import com.runemate.game.api.hybrid.queries.InterfaceComponentQueryBuilder;
-import com.runemate.game.api.hybrid.queries.NpcQueryBuilder;
-import com.runemate.game.api.hybrid.queries.PlayerQueryBuilder;
-import com.runemate.game.api.hybrid.queries.ProjectileQueryBuilder;
-import com.runemate.game.api.hybrid.queries.QueryBuilder;
-import com.runemate.game.api.hybrid.queries.results.LocatableEntityQueryResults;
-import com.runemate.game.api.hybrid.queries.results.QueryResults;
-import com.runemate.game.api.hybrid.region.GameObjects;
-import com.runemate.game.api.hybrid.region.GroundItems;
-import com.runemate.game.api.hybrid.region.Npcs;
-import com.runemate.game.api.hybrid.region.Players;
-import com.runemate.game.api.hybrid.region.Projectiles;
-import com.runemate.game.api.hybrid.util.Resources;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ObservableValue;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
+import com.runemate.bots.dev.*;
+import com.runemate.bots.dev.ui.*;
+import com.runemate.bots.dev.ui.element.query.transform.*;
+import com.runemate.bots.util.*;
+import com.runemate.game.api.hybrid.entities.*;
+import com.runemate.game.api.hybrid.local.hud.interfaces.*;
+import com.runemate.game.api.hybrid.queries.*;
+import com.runemate.game.api.hybrid.queries.results.*;
+import com.runemate.game.api.hybrid.region.*;
+import com.runemate.game.api.hybrid.util.*;
+import java.awt.event.*;
+import java.io.*;
+import java.lang.reflect.*;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.*;
+import java.util.regex.*;
+import java.util.stream.*;
+import javafx.beans.property.*;
+import javafx.beans.value.*;
+import javafx.event.ActionEvent;
+import javafx.fxml.*;
+import javafx.geometry.*;
 import javafx.scene.Node;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeTableColumn;
-import javafx.scene.control.TreeTableView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.util.Callback;
-import javafx.util.Pair;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.*;
+import javafx.util.*;
 
 public class QueryBuilderExtension extends VBox implements Initializable {
 
-    public static final List<Type> SUPPORTED_PARAMETER_TYPES = Arrays.asList(
-        String.class,
-        Pattern.class,
-        int.class,
-        boolean.class,
-        GameObject.Type.class,
-        InterfaceComponent.Type.class
-    );
+    public static final List<Type>
+        SUPPORTED_PARAMETER_TYPES =
+        Arrays.asList(String.class, Pattern.class, int.class, boolean.class, GameObject.Type.class, InterfaceComponent.Type.class);
     public static final Map<Class<?>, String> NEWQUERY_TEXT = new HashMap<>();
     public static final Map<Class<?>, Supplier<QueryBuilder>> NEWQUERY_SUPPLIERS = new HashMap<>();
 
@@ -101,8 +62,7 @@ public class QueryBuilderExtension extends VBox implements Initializable {
     @FXML
     private TextField queryText;
     @FXML
-    private TreeTableColumn<Pair<Method, Object>, String> queryCommentTreeTableColumn,
-        queryValueTreeTableColumn;
+    private TreeTableColumn<Pair<Method, Object>, String> queryCommentTreeTableColumn, queryValueTreeTableColumn;
     @FXML
     private TreeTableColumn<Pair<Method, Object>, Node> queryObjectTreeTableColumn;
 
@@ -140,38 +100,38 @@ public class QueryBuilderExtension extends VBox implements Initializable {
         transformProperty.bind(qbSelector.selectedBuilderProperty());
 
         //When it changes we want to build a new query
-        qbSelector.selectedBuilderProperty().addListener(((observable, oldValue, newValue) -> {
-            invalidateQuery();
-            if (newValue == null) {
-                return;
+        qbSelector.selectedBuilderProperty().addListener((
+            (observable, oldValue, newValue) -> {
+                invalidateQuery();
+                if (newValue == null) {
+                    return;
+                }
+                final QueryParameterContainer container = new QueryParameterContainer(newValue, this);
+                queryContainer.getChildren().setAll(qbSelector, container);
             }
-            final QueryParameterContainer container = new QueryParameterContainer(newValue, this);
-            queryContainer.getChildren().setAll(qbSelector, container);
-        }));
+        ));
 
 
-        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, Node>, ObservableValue<Node>>
-            objectCallback = param -> {
+        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, Node>, ObservableValue<Node>> objectCallback = param -> {
             Pair<Method, Object> vv = param.getValue().getValue();
             if (vv.getKey() == null) {
                 if (vv.getValue() == null) {
                     return DevelopmentToolkitPage.NULL_NODE_VALUE;
                 }
                 if (Map.Entry.class.isAssignableFrom(vv.getValue().getClass())) {
-                    return new SimpleObjectProperty<>(new Text(optionallyThreadedCall(
-                        () -> cleanToString(((Map.Entry<?, ?>) vv.getValue()).getKey()))));
+                    return new SimpleObjectProperty<>(new Text(optionallyThreadedCall(() -> cleanToString(((Map.Entry<?, ?>) vv.getValue()).getKey()))));
                 }
                 if (vv.getValue() instanceof Class) {
-                    return new SimpleObjectProperty<>(
-                        new Text(((Class) vv.getValue()).getSimpleName()));
+                    return new SimpleObjectProperty<>(new Text(((Class) vv.getValue()).getSimpleName()));
                 }
-                return new SimpleObjectProperty<>(
-                    new Text(optionallyThreadedCall(() -> cleanToString(vv.getValue()))));
+                return new SimpleObjectProperty<>(new Text(optionallyThreadedCall(() -> cleanToString(vv.getValue()))));
             }
             final Text typeText = new Text(vv.getKey().getReturnType().getSimpleName());
             typeText.getStyleClass().addAll("type", "type-" + (
-                ClassUtil.isPrimitiveOrWrapper(vv.getKey().getReturnType()) ? "primitive" :
-                    Integer.toString(vv.getKey().getReturnType().getSimpleName().charAt(0) % 16)));
+                ClassUtil.isPrimitiveOrWrapper(vv.getKey().getReturnType())
+                    ? "primitive"
+                    : Integer.toString(vv.getKey().getReturnType().getSimpleName().charAt(0) % 16)
+            ));
             final Text spaceText = new Text(" ");
             final Text nameText = new Text(vv.getKey().getName());
             // tried TextFlow but couldn't use it due to internal bug with TableViews and TextFlows :(
@@ -180,14 +140,11 @@ public class QueryBuilderExtension extends VBox implements Initializable {
             return new SimpleObjectProperty<>(hbox);
             //return new SimpleObjectProperty<>(new Text(vv.getKey().getReturnType().getSimpleName() + " " + vv.getKey().getName()));
         };
-        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, String>, ObservableValue<String>>
-            valueCallback = param -> {
+        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, String>, ObservableValue<String>> valueCallback = param -> {
             Pair<Method, Object> vv = param.getValue().getValue();
             if (vv.getKey() == null) {
-                if (vv.getValue() != null && Map.Entry.class.isAssignableFrom(
-                    vv.getValue().getClass())) {
-                    return new SimpleStringProperty(optionallyThreadedCall(
-                        () -> cleanToString(((Map.Entry<?, ?>) vv.getValue()).getValue())));
+                if (vv.getValue() != null && Map.Entry.class.isAssignableFrom(vv.getValue().getClass())) {
+                    return new SimpleStringProperty(optionallyThreadedCall(() -> cleanToString(((Map.Entry<?, ?>) vv.getValue()).getValue())));
                 }
                 return null;
             }
@@ -214,11 +171,9 @@ public class QueryBuilderExtension extends VBox implements Initializable {
                 }
                 return null;
             }
-            return new SimpleStringProperty(
-                optionallyThreadedCall(() -> cleanToString(vv.getValue())));
+            return new SimpleStringProperty(optionallyThreadedCall(() -> cleanToString(vv.getValue())));
         };
-        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, String>, ObservableValue<String>>
-            commentCallback = param -> {
+        final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, String>, ObservableValue<String>> commentCallback = param -> {
             Object object = param.getValue().getValue().getValue();
             if (object == null) {
                 return null;
@@ -301,14 +256,17 @@ public class QueryBuilderExtension extends VBox implements Initializable {
                 }
 
                 this.setValue(new Pair<>(null, "Queried in " + time + "ms"));
-                return res.stream()
-                    .map(i -> new ReflectiveTreeItem(null, i))
-                    .collect(Collectors.toList());
+                return res.stream().map(i -> new ReflectiveTreeItem(null, i)).collect(Collectors.toList());
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
             return Collections.emptyList();
         }
+    }
+
+    @FXML
+    private void onRefresh(ActionEvent event) {
+        invalidateQuery();
     }
 }

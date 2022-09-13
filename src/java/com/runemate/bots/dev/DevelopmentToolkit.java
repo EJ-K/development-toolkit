@@ -31,6 +31,7 @@ import com.runemate.game.api.script.*;
 import com.runemate.game.api.script.framework.*;
 import com.runemate.game.api.script.framework.listeners.*;
 import com.runemate.game.api.script.framework.listeners.events.*;
+import com.runemate.game.api.script.framework.listeners.events.Event;
 import java.awt.*;
 import java.awt.geom.*;
 import java.io.*;
@@ -46,24 +47,7 @@ import javafx.beans.property.*;
 import javafx.scene.control.*;
 import javafx.util.*;
 
-public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
-    GrandExchangeListener,
-    ChatboxListener,
-    InventoryListener,
-    EquipmentListener,
-    AnimationListener,
-    MoneyPouchListener,
-    SkillListener,
-    VarpListener,
-    VarbitListener,
-    HitsplatListener,
-    PlayerMovementListener,
-    ProjectileLaunchListener,
-    DeathListener,
-    MenuInteractionListener,
-    TargetListener,
-    EngineListener/*,
-        VarcListener*/ {
+public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, GlobalListener {
 
     private static final Class<?>[] EMPTY_CLASS_ARRAY = new Class<?>[0];
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
@@ -187,7 +171,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         });
         DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Varbit.class, o -> {
             Varbit def = (Varbit) o;
-            VarbitID known = VarbitID.byId(def.getId());
+            VarbitID known = Arrays.stream(VarbitID.values()).filter(it -> it.getId() == def.getId()).findAny().orElse(null);
             if (known != null) {
                 return String.format("Varbit %s [%s]", def.getId(), known.name());
             }
@@ -195,7 +179,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
         });
         DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Varp.class, o -> {
             Varp def = (Varp) o;
-            VarpID known = VarpID.byId(def.getIndex());
+            VarpID known = Arrays.stream(VarpID.values()).filter(it -> it.getId() == def.getIndex()).findAny().orElse(null);
             if (known != null) {
                 return String.format("Varp %s [%s]", def.getIndex(), known.name());
             }
@@ -222,7 +206,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
     private DevelopmentToolkitPage developmentToolkitPage;
     private TreeItem<Pair<Method, Object>> grandExchangeTreeItem, chatboxTreeItem, inventoryTreeItem, moneyPouchTreeItem, skillTreeItem,
         varpTreeItem, animationTreeItem, hitsplatTreeItem, equipmentTreeItem, varbitTreeItem, playerMovementTreeItem, deathTreeItem,
-        menuInteractionTreeItem, targetTreeItem, projectileTreeItem;
+        menuInteractionTreeItem, targetTreeItem, projectileTreeItem, varcTreeItem, groundItemTree, playerTree, npcTree;
     private ObjectProperty<DevelopmentToolkitPage> botInterfaceProperty;
 
     public DevelopmentToolkit() {
@@ -439,7 +423,6 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
                 )
             );
         botInterfaceProperty().get().getEventsTreeTableView().getRoot().getChildren().setAll(
-            animationTreeItem = new TreeItem<>(new Pair<>(null, AnimationListener.class.getSimpleName())),
             grandExchangeTreeItem = new TreeItem<>(new Pair<>(null, GrandExchangeListener.class.getSimpleName())),
             chatboxTreeItem = new TreeItem<>(new Pair<>(null, ChatboxListener.class.getSimpleName())),
             inventoryTreeItem = new TreeItem<>(new Pair<>(null, InventoryListener.class.getSimpleName())),
@@ -447,12 +430,12 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
             skillTreeItem = new TreeItem<>(new Pair<>(null, SkillListener.class.getSimpleName())),
             varpTreeItem = new TreeItem<>(new Pair<>(null, VarpListener.class.getSimpleName())),
             varbitTreeItem = new TreeItem<>(new Pair<>(null, VarbitListener.class.getSimpleName())),
-            //varcTreeItem = new TreeItem<>(new Pair<>(null, VarcListener.class.getSimpleName())),
-            hitsplatTreeItem = new TreeItem<>(new Pair<>(null, HitsplatListener.class.getSimpleName())),
-            playerMovementTreeItem = new TreeItem<>(new Pair<>(null, PlayerMovementListener.class.getSimpleName())),
-            deathTreeItem = new TreeItem<>(new Pair<>(null, DeathListener.class.getSimpleName())),
+            varcTreeItem = new TreeItem<>(new Pair<>(null, VarcListener.class.getSimpleName())),
+            groundItemTree = new TreeItem<>(new Pair<>(null, GroundItemListener.class.getSimpleName())),
+            playerTree = new TreeItem<>(new Pair<>(null, PlayerListener.class.getSimpleName())),
+            npcTree = new TreeItem<>(new Pair<>(null, NpcListener.class.getSimpleName())),
             menuInteractionTreeItem = new TreeItem<>(new Pair<>(null, MenuInteractionListener.class.getSimpleName())),
-            targetTreeItem = new TreeItem<>(new Pair<>(null, TargetListener.class.getSimpleName()))
+            projectileTreeItem = new TreeItem<>(new Pair<>(null, ProjectileLaunchListener.class.getSimpleName()))
         );
         botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().setAll(
             new ReflectiveTreeItem.StaticReflectiveTreeItem(
@@ -723,153 +706,233 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI,
     }
 
     @Override
-    public void onMessageReceived(MessageEvent event) {
+    public void onEvent(final Event event) {
         if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
             return;
         }
-        Platform.runLater(() -> chatboxTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
+        final ReflectiveTreeItem item;
+        if (event instanceof VarpEvent) {
+            item = new ReflectiveTreeItem(null, new VarpEventWrapper((VarpEvent) event));
+        } else if (event instanceof VarbitEvent) {
+            item = new ReflectiveTreeItem(null, new VarbitEventWrapper((VarbitEvent) event));
+        } else {
+            item = new ReflectiveTreeItem(null, event);
+        }
 
-    @Override
-    public void onContentsChanged(MoneyPouchEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+        final TreeItem<Pair<Method, Object>> tree;
+        if (event instanceof EntityEvent) {
+            switch (((EntityEvent) event).getEntityType()) {
+                case NPC: {
+                    tree = npcTree;
+                    break;
+                }
+                case PLAYER: {
+                    tree = playerTree;
+                    break;
+                }
+                case GROUNDITEM: {
+                    tree = groundItemTree;
+                    break;
+                }
+                case PROJECTILE: {
+                    tree = projectileTreeItem;
+                    break;
+                }
+                default: {
+                    throw new IllegalStateException("Unsupported EntityType: " + ((EntityEvent) event).getEntityType());
+                }
+            }
+        } else if (event instanceof MessageEvent) {
+            tree = chatboxTreeItem;
+        } else if (event instanceof ItemEvent) {
+            if (((ItemEvent) event).getItem().getOrigin() == SpriteItem.Origin.EQUIPMENT) {
+                tree = equipmentTreeItem;
+            } else {
+                tree = inventoryTreeItem;
+            }
+        } else if (event instanceof SkillEvent) {
+            tree = skillTreeItem;
+        } else if (event instanceof VarpEvent) {
+            tree = varpTreeItem;
+        } else if (event instanceof VarbitEvent) {
+            tree = varbitTreeItem;
+        } else if (event instanceof GrandExchangeEvent) {
+            tree = grandExchangeTreeItem;
+        } else if (event instanceof VarcEvent) {
+            tree = varcTreeItem;
+        } else if (event instanceof MenuInteractionEvent) {
+            tree = menuInteractionTreeItem;
+        } else {
             return;
         }
-        Platform.runLater(() -> moneyPouchTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+
+        Platform.runLater(() -> tree.getChildren().add(item));
     }
 
-    @Override
-    public void onItemAdded(ItemEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onItemRemoved(ItemEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onItemEquipped(ItemEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onItemUnequipped(ItemEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onExperienceGained(SkillEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onLevelUp(SkillEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onValueChanged(VarpEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> varpTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onValueChanged(VarbitEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> varbitTreeItem.getChildren().add(new ReflectiveTreeItem(null, new VarbitEventWrapper(event))));
-    }
-
-    @Override
-    public void onSlotUpdated(GrandExchangeEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> grandExchangeTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onAnimationChanged(AnimationEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> animationTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onHitsplatAdded(HitsplatEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> hitsplatTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onDeath(DeathEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> deathTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onInteraction(MenuInteractionEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> menuInteractionTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onPlayerMoved(PlayerMovementEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> playerMovementTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onTargetChanged(TargetEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> targetTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onProjectileLaunched(ProjectileLaunchEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> projectileTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onCycleStart() {
-
-    }
+//    @Override
+//    public void onMessageReceived(MessageEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> chatboxTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onContentsChanged(MoneyPouchEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> moneyPouchTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onItemAdded(ItemEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onItemRemoved(ItemEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onItemEquipped(ItemEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onItemUnequipped(ItemEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onExperienceGained(SkillEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onLevelUp(SkillEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onValueChanged(VarpEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> varpTreeItem.getChildren().add(new ReflectiveTreeItem(null, new VarpEventWrapper(event))));
+//    }
+//
+//    @Override
+//    public void onValueChanged(VarbitEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> varbitTreeItem.getChildren().add(new ReflectiveTreeItem(null, new VarbitEventWrapper(event))));
+//    }
+//
+//    @Override
+//    public void onSlotUpdated(GrandExchangeEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> grandExchangeTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onAnimationChanged(AnimationEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> animationTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onHitsplatAdded(HitsplatEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> hitsplatTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onDeath(DeathEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> deathTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onInteraction(MenuInteractionEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> menuInteractionTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onPlayerMoved(PlayerMovementEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> playerMovementTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onTargetChanged(TargetEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> targetTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onProjectileLaunched(ProjectileLaunchEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> projectileTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onStringChanged(final VarcEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> varcTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onIntChanged(final VarcEvent event) {
+//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
+//            return;
+//        }
+//        Platform.runLater(() -> varcTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
+//    }
+//
+//    @Override
+//    public void onCycleStart() {
+//
+//    }
 
     /*@Override
     public void onIntChanged(VarcEvent event) {
