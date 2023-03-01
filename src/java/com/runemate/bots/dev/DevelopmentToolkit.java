@@ -206,7 +206,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
     private DevelopmentToolkitPage developmentToolkitPage;
     private TreeItem<Pair<Method, Object>> grandExchangeTreeItem, chatboxTreeItem, inventoryTreeItem, moneyPouchTreeItem, skillTreeItem,
         varpTreeItem, animationTreeItem, hitsplatTreeItem, equipmentTreeItem, varbitTreeItem, playerMovementTreeItem, deathTreeItem,
-        menuInteractionTreeItem, targetTreeItem, projectileTreeItem, varcTreeItem, groundItemTree, playerTree, npcTree;
+        menuInteractionTreeItem, targetTreeItem, projectileTreeItem, varcTreeItem, groundItemTree, playerTree, npcTree, gameObjectTree;
     private ObjectProperty<DevelopmentToolkitPage> botInterfaceProperty;
 
     public DevelopmentToolkit() {
@@ -434,6 +434,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             groundItemTree = new TreeItem<>(new Pair<>(null, GroundItemListener.class.getSimpleName())),
             playerTree = new TreeItem<>(new Pair<>(null, PlayerListener.class.getSimpleName())),
             npcTree = new TreeItem<>(new Pair<>(null, NpcListener.class.getSimpleName())),
+            gameObjectTree = new TreeItem<>(new Pair<>(null, GameObjectListener.class.getSimpleName())),
             menuInteractionTreeItem = new TreeItem<>(new Pair<>(null, MenuInteractionListener.class.getSimpleName())),
             projectileTreeItem = new TreeItem<>(new Pair<>(null, ProjectileLaunchListener.class.getSimpleName()))
         );
@@ -736,6 +737,10 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                 }
                 case PROJECTILE: {
                     tree = projectileTreeItem;
+                    break;
+                }
+                case GAMEOBJECT: {
+                    tree = gameObjectTree;
                     break;
                 }
                 default: {
