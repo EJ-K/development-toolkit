@@ -5,17 +5,20 @@ import static javafx.scene.paint.Color.HOTPINK;
 import static javafx.scene.paint.Color.YELLOWGREEN;
 
 import com.runemate.bots.dev.DevelopmentToolkit;
+import com.runemate.client.game.open.*;
 import com.runemate.game.api.hybrid.entities.Entity;
 import com.runemate.game.api.hybrid.entities.GroundItem;
 import com.runemate.game.api.hybrid.entities.Npc;
 import com.runemate.game.api.hybrid.entities.Player;
 import com.runemate.game.api.hybrid.entities.details.Renderable;
+import com.runemate.game.api.hybrid.geom.*;
 import com.runemate.game.api.hybrid.local.Screen;
 import com.runemate.game.api.hybrid.local.hud.Model;
 import com.runemate.game.api.hybrid.local.hud.interfaces.InterfaceComponent;
 import com.runemate.game.api.hybrid.local.hud.interfaces.SpriteItem;
 import com.runemate.game.api.hybrid.location.*;
 import com.runemate.game.api.hybrid.web.vertex.*;
+import com.runemate.game.api.osrs.entities.*;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
@@ -183,26 +186,46 @@ public class DevelopmentToolkitOverlay {
             private void render(Object renderable, List<Integer> updatedHashes) {
                 try {
                     if (renderable instanceof Entity) {
-                        final int hash = renderable.hashCode();
-                        final Polygon model = bot.getPlatform().invokeAndWait(() -> {
-                            final Model m = ((Entity) renderable).getModel();
-                            return m == null ? null : m.projectConvexHull();
-                        });
-                        if (model == null) {
-                            return;
-                        }
-                        final Paint color;
-                        if (renderable instanceof Npc) {
-                            color = Color.DODGERBLUE;
-                        } else if (renderable instanceof Player) {
-                            color = BLUE;
-                        } else if (renderable instanceof GroundItem) {
-                            color = Color.GREEN;
+                        if (renderable instanceof OSRSEntity) {
+                            final int hash = renderable.hashCode();
+                            final var model = bot.getPlatform().invokeAndWait(() -> OpenHull.lookup(((OSRSEntity) renderable).uid));
+                            if (model == null) {
+                                return;
+                            }
+                            final Paint color;
+                            if (renderable instanceof Npc) {
+                                color = Color.DODGERBLUE;
+                            } else if (renderable instanceof Player) {
+                                color = BLUE;
+                            } else if (renderable instanceof GroundItem) {
+                                color = Color.GREEN;
+                            } else {
+                                color = Color.RED;
+                            }
+                            updatedHashes.add(hash);
+                            shape(hash, model, color);
                         } else {
-                            color = Color.RED;
+                            final int hash = renderable.hashCode();
+                            final Polygon model = bot.getPlatform().invokeAndWait(() -> {
+                                final Model m = ((Entity) renderable).getModel();
+                                return m == null ? null : m.projectConvexHull();
+                            });
+                            if (model == null) {
+                                return;
+                            }
+                            final Paint color;
+                            if (renderable instanceof Npc) {
+                                color = Color.DODGERBLUE;
+                            } else if (renderable instanceof Player) {
+                                color = BLUE;
+                            } else if (renderable instanceof GroundItem) {
+                                color = Color.GREEN;
+                            } else {
+                                color = Color.RED;
+                            }
+                            updatedHashes.add(hash);
+                            poly(hash, model, color);
                         }
-                        updatedHashes.add(hash);
-                        poly(hash, model, color);
                     } else if (renderable instanceof InterfaceComponent) {
                         final int hash = renderable.hashCode();
                         final InterfaceComponent component = (InterfaceComponent) renderable;
@@ -271,6 +294,27 @@ public class DevelopmentToolkitOverlay {
             private void poly(int hash, Polygon poly, Paint color) {
                 final javafx.scene.shape.Polygon shape = toFxPoly(poly);
 
+                final Shape existing = shapes.get(hash);
+                if (existing != null) {
+                    final javafx.scene.shape.Polygon epoly = (javafx.scene.shape.Polygon) existing;
+                    epoly.getPoints().setAll(shape.getPoints());
+                    return;
+                }
+
+                shape.setStroke(color);
+                shape.setFill(Color.TRANSPARENT);
+                shape.setStrokeWidth(2.0);
+                shapes.put(hash, shape);
+            }
+
+            private void shape(int hash, SimplePolygon poly, Paint color) {
+                var points = new double[poly.getPoints().size() * 2];
+                var i = 0;
+                for (var point : poly.getPoints()) {
+                    points[i++] = point.getX();
+                    points[i++] = point.getY();
+                }
+                var shape = new javafx.scene.shape.Polygon(points);
                 final Shape existing = shapes.get(hash);
                 if (existing != null) {
                     final javafx.scene.shape.Polygon epoly = (javafx.scene.shape.Polygon) existing;
