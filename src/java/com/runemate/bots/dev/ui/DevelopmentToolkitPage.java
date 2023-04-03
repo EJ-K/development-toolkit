@@ -4,7 +4,9 @@ import com.runemate.bots.dev.*;
 import com.runemate.bots.dev.ui.element.query.*;
 import com.runemate.bots.ui.util.*;
 import com.runemate.bots.util.*;
+import com.runemate.game.api.hybrid.location.*;
 import com.runemate.game.api.hybrid.util.*;
+import com.runemate.game.api.hybrid.web.*;
 import com.runemate.ui.control.*;
 import java.io.*;
 import java.lang.reflect.*;
@@ -26,31 +28,33 @@ import javafx.util.*;
 public class DevelopmentToolkitPage extends VBox implements Initializable {
 
     public static final Map<Class<?>, Function<Object, String>> OVERRIDDEN_TO_STRINGS = new HashMap<>(5);
-    public static final ObservableValue<String> NULL_STRING_PROPERTY = new SimpleStringProperty("null"),
-        EMPTY_STRING_PROPERTY =
-            new SimpleStringProperty("empty");
+    public static final ObservableValue<String> NULL_STRING_PROPERTY = new SimpleStringProperty("null");
+    public static final ObservableValue<String> EMPTY_STRING_PROPERTY = new SimpleStringProperty("empty");
     public static final ObservableValue<Node> NULL_NODE_VALUE = new SimpleObjectProperty<>(new Text("null"));
     private final DevelopmentToolkit bot;
     @FXML
     private VBox entitiesTableViewContainer, eventsTableViewContainer, miscTableViewContainer, databaseTableViewContainer,
-        toggleSwitchContainer;
+        navigationTableViewContainer, toggleSwitchContainer;
     @FXML
-    private TreeTableView<Pair<Method, Object>> entitiesTreeTableView, eventsTreeTableView, miscTreeTableView, databaseTreeTableView;
+    private TreeTableView<Pair<Method, Object>> entitiesTreeTableView, eventsTreeTableView, miscTreeTableView, databaseTreeTableView,
+        navigationTreeTableView;
     @FXML
     private TreeTableColumn<Pair<Method, Object>, String> entityValueTreeTableColumn, entityCommentTreeTableColumn,
         eventValueTreeTableColumn, eventCommentTreeTableColumn, miscValueTreeTableColumn, miscCommentTreeTableColumn,
-        databaseValueTreeTableColumn, databaseCommentTreeTableColumn;
+        navigationValueTreeTableColumn, navigationCommentTreeTableColumn, databaseValueTreeTableColumn, databaseCommentTreeTableColumn;
     @FXML
     private TreeTableColumn<Pair<Method, Object>, Node> entityObjectTreeTableColumn, eventObjectTreeTableColumn, miscObjectTreeTableColumn,
-        databaseObjectTreeTableColumn;
+        navigationObjectTreeTableColumn, databaseObjectTreeTableColumn;
     @FXML
-    private TitledPane entitiesTitledPane, eventsTitledPane, miscTitledPane, databaseTitledPane;
+    private TitledPane entitiesTitledPane, eventsTitledPane, miscTitledPane, databaseTitledPane, navigationTitledPane;
     @FXML
     private TextField entitiesSearchTextField, databaseSearchTextField;
     @FXML
     private CheckBox entitiesSearchRegexCheckBox, databaseSearchRegexCheckBox;
     @FXML
-    private Button qbButton;
+    private Button qbButton, buildPathButton;
+    @FXML
+    private Spinner<Integer> xSpinner, ySpinner, zSpinner;
 
     private ToggleSwitch hoverSwitch, overlaySwitch;
 
@@ -132,8 +136,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
                     return DevelopmentToolkitPage.NULL_NODE_VALUE;
                 }
                 if (Map.Entry.class.isAssignableFrom(vv.getValue().getClass())) {
-                    return new SimpleObjectProperty<>(new Text(optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(
-                        ((Map.Entry<?, ?>) vv.getValue()).getKey()))));
+                    return new SimpleObjectProperty<>(new Text(optionallyThreadedCall(() -> DevelopmentToolkitPage.cleanToString(((Map.Entry<?, ?>) vv.getValue()).getKey()))));
                 }
                 if (vv.getValue() instanceof Class) {
                     return new SimpleObjectProperty<>(new Text(((Class) vv.getValue()).getSimpleName()));
@@ -141,11 +144,13 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
                 return new SimpleObjectProperty<>(new Text(optionallyThreadedCall(() -> cleanToString(vv.getValue()))));
             }
             final Text typeText = new Text(vv.getKey().getReturnType().getSimpleName());
-            typeText.getStyleClass().addAll("type", "type-" + (
-                ClassUtil.isPrimitiveOrWrapper(vv.getKey().getReturnType())
-                    ? "primitive"
-                    : Integer.toString(vv.getKey().getReturnType().getSimpleName().charAt(0) % 16)
-            ));
+            typeText.getStyleClass()
+                .addAll(
+                    "type",
+                    "type-" + (ClassUtil.isPrimitiveOrWrapper(vv.getKey().getReturnType())
+                        ? "primitive"
+                        : Integer.toString(vv.getKey().getReturnType().getSimpleName().charAt(0) % 16))
+                );
             final Text spaceText = new Text(" ");
             final Text nameText = new Text(vv.getKey().getName());
             // tried TextFlow but couldn't use it due to internal bug with TableViews and TextFlows :(
@@ -262,6 +267,43 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
                 databaseTreeTableView.getRoot().getChildren().forEach(ti -> ti.setExpanded(false));
             }
         });
+
+        // NAVIGATION
+        VerticalDragResizerUtil.makeResizable(navigationTableViewContainer, 6);
+        navigationTableViewContainer.maxHeightProperty().bindBidirectional(navigationTableViewContainer.minHeightProperty());
+        navigationTreeTableView.setRoot(new TreeItem<>(new Pair<>(null, null)));
+
+        navigationObjectTreeTableColumn.setCellValueFactory(objectCallback);
+        navigationValueTreeTableColumn.setCellValueFactory(valueCallback);
+//        navigationCommentTreeTableColumn.setCellValueFactory(commentCallback);
+
+        navigationTitledPane.expandedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue && navigationTreeTableView.getRoot() != null) {
+                navigationTreeTableView.getRoot().getChildren().forEach(ti -> ti.setExpanded(false));
+            }
+        });
+
+        xSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(-1, Integer.MAX_VALUE, 0));
+        ySpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(-1, Integer.MAX_VALUE, 0));
+        zSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 4, 0));
+        buildPathButton.setOnAction(event -> {
+            getNavigationTreeTableView().getRoot().getChildren().setAll(
+                bot.buildPseudoRootTreeItem(
+                    "Path",
+                    () -> {
+                        int x = xSpinner.getValue(), y = ySpinner.getValue(), z = zSpinner.getValue();
+                        if (x <= 1 || y <= 1 || z < 0 || z > 4) {
+                            return Collections.emptyList();
+                        }
+
+                        var path = WebPath.buildTo(new Coordinate(x, y, z));
+                        return path != null ? path.getVertices() : Collections.emptyList();
+                    },
+                    null,
+                    null
+                )
+            );
+        });
     }
 
     public TreeTableView<Pair<Method, Object>> getEntitiesTreeTableView() {
@@ -274,6 +316,10 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
 
     public TreeTableView<Pair<Method, Object>> getMiscTreeTableView() {
         return miscTreeTableView;
+    }
+
+    public TreeTableView<Pair<Method, Object>> getNavigationTreeTableView() {
+        return navigationTreeTableView;
     }
 
     public TreeTableView<Pair<Method, Object>> getDatabaseTreeTableView() {

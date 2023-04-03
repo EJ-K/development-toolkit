@@ -5,6 +5,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.TreeTableColumn?>
@@ -13,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<fx:root prefWidth="600.0" styleClass="root" type="VBox" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root prefWidth="600.0" styleClass="root" type="VBox" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
     <children>
       <HBox>
          <children>
@@ -168,5 +169,42 @@
                 </VBox>
             </content>
         </TitledPane>
+      <Separator layoutX="10.0" layoutY="579.0" />
+      <TitledPane fx:id="navigationTitledPane" expanded="false" layoutX="10.0" layoutY="582.0" text="Navigation">
+         <content>
+            <VBox spacing="8.0">
+               <children>
+                  <HBox alignment="CENTER_LEFT" spacing="4.0">
+                     <children>
+                        <Spinner editable="true" prefWidth="80.0" fx:id="xSpinner" />
+                        <Spinner fx:id="ySpinner" editable="true" prefWidth="80.0" />
+                        <Spinner fx:id="zSpinner" editable="true" prefWidth="80.0" />
+                        <Button fx:id="buildPathButton" mnemonicParsing="false" text="Build" />
+                     </children>
+                  </HBox>
+                  <VBox fx:id="navigationTableViewContainer" alignment="TOP_CENTER" spacing="6.0">
+                     <children>
+                        <TreeTableView fx:id="navigationTreeTableView" showRoot="false" tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
+                           <columnResizePolicy>
+                              <TreeTableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                           </columnResizePolicy>
+                           <columns>
+                              <TreeTableColumn fx:id="navigationObjectTreeTableColumn" text="Event/Property" />
+                              <TreeTableColumn fx:id="navigationValueTreeTableColumn" text="Value" />
+                              <TreeTableColumn fx:id="miscCommentTreeTableColumn1" prefWidth="75.0" text="Comment" visible="false" />
+                           </columns>
+                        </TreeTableView>
+                        <VBox maxWidth="50.0" mouseTransparent="true">
+                           <children>
+                              <Separator />
+                              <Separator />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+         </content>
+      </TitledPane>
     </children>
 </fx:root>

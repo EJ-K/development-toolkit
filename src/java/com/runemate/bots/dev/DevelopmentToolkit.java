@@ -63,7 +63,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             new Pair<>(Skill.class, "getExperienceAsPercent"),
             new Pair<>(Skill.class, "getExperienceToNextLevelAsPercent"),
             new Pair<>(LocatableEntity.class, "getHighPrecisionPosition"),
-            new Pair<>(Interactable.class, "isVisible"),
+//            new Pair<>(Interactable.class, "isVisible"),
             new Pair<>(Validatable.class, "isValid"),
             new Pair<>(Rotatable.class, "getHighPrecisionOrientation"),
             new Pair<>(Model.class, "getBoundingModel"),
@@ -198,11 +198,12 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             QuestDefinition def = q.getDefinition();
             return def == null ? q.getName() : def.getDisplayName();
         });
+        DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Rune.class, o -> ((Rune) o).getName());
     }
 
     private final DevelopmentToolkitOverlay overlay = new DevelopmentToolkitOverlay(this);
     private final ExecutorService executorService = Executors.newCachedThreadPool();
-    private final List<Renderable> renderables = Collections.synchronizedList(new ArrayList<>());
+    private final List<Object> renderables = Collections.synchronizedList(new ArrayList<>());
     private DevelopmentToolkitPage developmentToolkitPage;
     private TreeItem<Pair<Method, Object>> grandExchangeTreeItem, chatboxTreeItem, inventoryTreeItem, moneyPouchTreeItem, skillTreeItem,
         varpTreeItem, animationTreeItem, hitsplatTreeItem, equipmentTreeItem, varbitTreeItem, playerMovementTreeItem, deathTreeItem,
@@ -420,6 +421,12 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                     Worlds::getLoaded,
                     entitiesSearchTextProperty,
                     entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    Banks.class.getSimpleName(),
+                    Banks::getLoaded,
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
                 )
             );
         botInterfaceProperty().get().getEventsTreeTableView().getRoot().getChildren().setAll(
@@ -436,17 +443,16 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             npcTree = new TreeItem<>(new Pair<>(null, NpcListener.class.getSimpleName())),
             gameObjectTree = new TreeItem<>(new Pair<>(null, GameObjectListener.class.getSimpleName())),
             menuInteractionTreeItem = new TreeItem<>(new Pair<>(null, MenuInteractionListener.class.getSimpleName())),
-            projectileTreeItem = new TreeItem<>(new Pair<>(null, ProjectileLaunchListener.class.getSimpleName()))
+            projectileTreeItem = new TreeItem<>(new Pair<>(null, ProjectileListener.class.getSimpleName()))
         );
         botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().setAll(
-            new ReflectiveTreeItem.StaticReflectiveTreeItem(
-                AccountInfo.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(AccountInfo.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Bank.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Camera.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Chatbox.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(ChatDialog.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(DepositBox.class),
-            new ReflectiveTreeItem.StaticReflectiveTreeItem(EnterAmountDialog.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(InputDialog.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Environment.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Equipment.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(GrandExchange.class),
@@ -479,36 +485,35 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Traversal.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(Wilderness.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(WorldHop.class),
-            new ReflectiveTreeItem.StaticReflectiveTreeItem(Projection.class)
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(Projection.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(Prayer.class),
+            buildPseudoRootTreeItem(
+                Rune.class.getSimpleName(),
+                () -> Arrays.asList(Rune.values()),
+                entitiesSearchTextProperty,
+                entitiesSearchRegexProperty
+            ),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(Magic.class) {
+                @Override
+                public List<TreeItem<Pair<Method, Object>>> query() {
+                    final List<TreeItem<Pair<Method, Object>>> results = new ArrayList<>(Arrays.asList(
+                        new StaticReflectiveTreeItem(
+                            Magic.Ancient.class),
+                        new StaticReflectiveTreeItem(Magic.Lunar.class),
+                        new StaticReflectiveTreeItem(Magic.Book.class)
+                    ));
+                    results.addAll(super.query());
+                    return results;
+                }
+            },
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(LootingBag.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(ControlPanelTab.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(OptionsTab.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(KourendHouseFavour.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(AchievementDiary.class),
+            new ReflectiveTreeItem.StaticReflectiveTreeItem(MakeAllInterface.class)
         );
-        if (Environment.isOSRS()) {
-            botInterfaceProperty().get()
-                .getMiscTreeTableView()
-                .getRoot()
-                .getChildren()
-                .addAll(
-                    new ReflectiveTreeItem.StaticReflectiveTreeItem(Prayer.class),
-                    new ReflectiveTreeItem.StaticReflectiveTreeItem(Magic.class) {
-                        @Override
-                        public List<TreeItem<Pair<Method, Object>>> query() {
-                            final List<TreeItem<Pair<Method, Object>>> results = new ArrayList<>(Arrays.asList(
-                                new StaticReflectiveTreeItem(
-                                    Magic.Ancient.class),
-                                new StaticReflectiveTreeItem(Magic.Lunar.class),
-                                new StaticReflectiveTreeItem(Magic.Book.class)
-                            ));
-                            results.addAll(super.query());
-                            return results;
-                        }
-                    },
-                    new ReflectiveTreeItem.StaticReflectiveTreeItem(LootingBag.class),
-                    new ReflectiveTreeItem.StaticReflectiveTreeItem(ControlPanelTab.class),
-                    new ReflectiveTreeItem.StaticReflectiveTreeItem(OptionsTab.class),
-                    new ReflectiveTreeItem.StaticReflectiveTreeItem(KourendHouseFavour.class),
-                    new ReflectiveTreeItem.StaticReflectiveTreeItem(AchievementDiary.class),
-                    new ReflectiveTreeItem.StaticReflectiveTreeItem(MakeAllInterface.class)
-                );
-        }
+
         botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().sort(Comparator.comparing(o -> (
             (o.getValue().getValue() instanceof Class) ? (Class) o.getValue().getValue() : o.getValue().getValue().getClass()
         ).getSimpleName()));
@@ -595,6 +600,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             botInterfaceProperty().get().getEventsTreeTableView().setRoot(null);
             botInterfaceProperty().get().getMiscTreeTableView().setRoot(null);
             botInterfaceProperty().get().getDatabaseTreeTableView().setRoot(null);
+            botInterfaceProperty().get().getNavigationTreeTableView().setRoot(null);
             botInterfaceProperty().get().setDisable(true);
             executorService.shutdown();
             overlay.destroy();
@@ -619,7 +625,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
         return overlay;
     }
 
-    private TreeItem<Pair<Method, Object>> buildPseudoRootTreeItem(
+    public TreeItem<Pair<Method, Object>> buildPseudoRootTreeItem(
         final String name,
         final Callable<Collection<?>> query,
         final StringProperty searchTextProperty,
@@ -673,12 +679,16 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                 final Pair<Method, Object> pair;
                 return item == null ? null : (pair = item.getValue()) == null ? null : pair.getValue();
             };
-            Stream<Object> stream = developmentToolkitPage.getEntitiesTreeTableView().getSelectionModel().getSelectedCells().stream().map(
-                mapper);
+            Stream<Object> stream = developmentToolkitPage.getEntitiesTreeTableView().getSelectionModel().getSelectedCells().stream().map(mapper);
 
             stream = Stream.concat(
                 stream,
                 developmentToolkitPage.getMiscTreeTableView().getSelectionModel().getSelectedCells().stream().map(mapper)
+            );
+
+            stream = Stream.concat(
+                stream,
+                developmentToolkitPage.getNavigationTreeTableView().getSelectionModel().getSelectedCells().stream().map(mapper)
             );
 
             final TreeTableView<Pair<Method, Object>> query = developmentToolkitPage.getQueryTreeView();
@@ -695,14 +705,14 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             }
 
             renderables.clear();
-            stream.filter(it -> Objects.nonNull(it) && it instanceof Renderable).map(it -> (Renderable) it).collect(Collectors.toCollection(
-                () -> renderables));
+            stream.filter(Objects::nonNull)
+                .collect(Collectors.toCollection(() -> renderables));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public List<Renderable> getRenderables() {
+    public List<Object> getRenderables() {
         return renderables;
     }
 
