@@ -427,6 +427,12 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                     Banks::getLoaded,
                     entitiesSearchTextProperty,
                     entitiesSearchRegexProperty
+                ),
+                buildPseudoRootTreeItem(
+                    "Seed Vault",
+                    () -> SeedVault.getItems().sortByIndex(),
+                    entitiesSearchTextProperty,
+                    entitiesSearchRegexProperty
                 )
             );
         botInterfaceProperty().get().getEventsTreeTableView().getRoot().getChildren().setAll(
@@ -497,8 +503,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                 @Override
                 public List<TreeItem<Pair<Method, Object>>> query() {
                     final List<TreeItem<Pair<Method, Object>>> results = new ArrayList<>(Arrays.asList(
-                        new StaticReflectiveTreeItem(
-                            Magic.Ancient.class),
+                        new StaticReflectiveTreeItem(Magic.Ancient.class),
                         new StaticReflectiveTreeItem(Magic.Lunar.class),
                         new StaticReflectiveTreeItem(Magic.Book.class)
                     ));
