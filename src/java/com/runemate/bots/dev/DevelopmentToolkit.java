@@ -207,7 +207,8 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
     private DevelopmentToolkitPage developmentToolkitPage;
     private TreeItem<Pair<Method, Object>> grandExchangeTreeItem, chatboxTreeItem, inventoryTreeItem, moneyPouchTreeItem, skillTreeItem,
         varpTreeItem, animationTreeItem, hitsplatTreeItem, equipmentTreeItem, varbitTreeItem, playerMovementTreeItem, deathTreeItem,
-        menuInteractionTreeItem, targetTreeItem, projectileTreeItem, varcTreeItem, groundItemTree, playerTree, npcTree, gameObjectTree;
+        menuInteractionTreeItem, targetTreeItem, projectileTreeItem, varcTreeItem, groundItemTree, playerTree, npcTree, gameObjectTree,
+        spotAnimationTreeItem;
     private ObjectProperty<DevelopmentToolkitPage> botInterfaceProperty;
 
     public DevelopmentToolkit() {
@@ -449,7 +450,8 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             npcTree = new TreeItem<>(new Pair<>(null, NpcListener.class.getSimpleName())),
             gameObjectTree = new TreeItem<>(new Pair<>(null, GameObjectListener.class.getSimpleName())),
             menuInteractionTreeItem = new TreeItem<>(new Pair<>(null, MenuInteractionListener.class.getSimpleName())),
-            projectileTreeItem = new TreeItem<>(new Pair<>(null, ProjectileListener.class.getSimpleName()))
+            projectileTreeItem = new TreeItem<>(new Pair<>(null, ProjectileListener.class.getSimpleName())),
+            spotAnimationTreeItem = new TreeItem<>(new Pair<>(null, SpotAnimationListener.class.getSimpleName()))
         );
         botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().setAll(
             new ReflectiveTreeItem.StaticReflectiveTreeItem(AccountInfo.class),
@@ -756,6 +758,10 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                 }
                 case GAMEOBJECT: {
                     tree = gameObjectTree;
+                    break;
+                }
+                case SPOTANIMATION: {
+                    tree = spotAnimationTreeItem;
                     break;
                 }
                 default: {
