@@ -3,10 +3,9 @@
     <name>Development Toolkit</name>
     <tag-line>RuneMate's Swiss Army Knife</tag-line>
     <description>Presents runtime data, such as the loaded NPCs, to assist in bot development.</description>
-    <version>2.4.3</version>
+    <version>2.4.4</version>
     <compatibility>
         <game>OSRS</game>
-        <game>RS3</game>
     </compatibility>
     <categories>
         <category>DEVELOPER_TOOLS</category>

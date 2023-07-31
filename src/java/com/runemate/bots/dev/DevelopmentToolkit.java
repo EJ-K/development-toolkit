@@ -593,6 +593,12 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                 QuestDefinitions::loadAll,
                 databaseSearchTextProperty,
                 databaseSearchRegexProperty
+            ),
+            buildPseudoRootTreeItem(
+                Structs.class.getSimpleName(),
+                Structs::loadAll,
+                databaseSearchTextProperty,
+                databaseSearchRegexProperty
             )
         ));
         setLoopDelay(2000);
