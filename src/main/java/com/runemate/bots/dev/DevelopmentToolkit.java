@@ -63,7 +63,6 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             new Pair<>(Skill.class, "getExperienceAsPercent"),
             new Pair<>(Skill.class, "getExperienceToNextLevelAsPercent"),
             new Pair<>(LocatableEntity.class, "getHighPrecisionPosition"),
-//            new Pair<>(Interactable.class, "isVisible"),
             new Pair<>(Validatable.class, "isValid"),
             new Pair<>(Rotatable.class, "getHighPrecisionOrientation"),
             new Pair<>(Model.class, "getBoundingModel"),
@@ -93,7 +92,6 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             new Pair<>(ItemDefinition.class, "getModelXScale"),
             new Pair<>(ItemDefinition.class, "getModelYScale"),
             new Pair<>(ItemDefinition.class, "getModelZScale"),
-            new Pair<>(InterfaceContainer.class, "getId"),
             new Pair<>(InterfaceComponent.class, "getContainer"),
             new Pair<>(InterfaceComponent.class, "getParentComponent"),
             new Pair<>(InterfaceComponent.class, "getContentType"),
@@ -184,14 +182,6 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                 return String.format("Varp %s [%s]", def.getIndex(), known.name());
             }
             return String.format("Varp %s", def.getIndex());
-        });
-        DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(OSRSInterfaceContainer.class, o -> {
-            InterfaceContainer def = (InterfaceContainer) o;
-            InterfaceContainerID known = InterfaceContainerID.byId(def.getIndex());
-            if (known != null) {
-                return String.format("InterfaceContainer %s [%s]", def.getIndex(), known.name());
-            }
-            return String.format("InterfaceContainer %s", def.getIndex());
         });
         DevelopmentToolkitPage.OVERRIDDEN_TO_STRINGS.put(Quest.OSRS.class, o -> {
             Quest q = (Quest) o;
@@ -334,12 +324,6 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
                 buildPseudoRootTreeItem(
                     HintArrows.class.getSimpleName(),
                     () -> HintArrows.getLoaded().sortByDistance(),
-                    entitiesSearchTextProperty,
-                    entitiesSearchRegexProperty
-                ),
-                buildPseudoRootTreeItem(
-                    InterfaceContainers.class.getSimpleName(),
-                    InterfaceContainers::getLoaded,
                     entitiesSearchTextProperty,
                     entitiesSearchRegexProperty
                 ),
