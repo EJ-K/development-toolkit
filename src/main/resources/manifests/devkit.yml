@@ -1,0 +1,16 @@
+mainClass: com.runemate.bots.dev.DevelopmentToolkit
+name: Development Toolkit
+tagline: RuneMate's Swiss Army Knife
+description: Presents runtime data, such as the loaded NPCs, to assist in bot development.
+version: 2.5.0
+internalId: devkit
+resources:
+  - css/DevelopmentToolkitPage.css
+  - fxml/DevelopmentToolkitPage.fxml
+  - fxml/QueryBuilderPage.fxml
+tags:
+  - devkit
+  - debug
+categories:
+  - DEVELOPER_TOOLS
+openSource: true
