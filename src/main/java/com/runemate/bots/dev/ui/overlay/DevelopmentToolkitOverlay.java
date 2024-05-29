@@ -22,9 +22,8 @@ import com.runemate.game.api.osrs.entities.*;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
+import java.util.*;
+import java.util.concurrent.*;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.beans.property.*;
@@ -41,15 +40,13 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javax.annotation.Nonnull;
+import org.jetbrains.annotations.*;
 
 public class DevelopmentToolkitOverlay {
 
     private final DevelopmentToolkit bot;
 
     private Overlay impl;
-
-    private Rectangle lastBounds;
-    private Point lastLoc;
 
     private final BooleanProperty showing = new SimpleBooleanProperty(false);
 
@@ -153,8 +150,8 @@ public class DevelopmentToolkitOverlay {
                     }
                     shapes.keySet().retainAll(updatedHashes);
 
-                    final Rectangle bounds = bot.getPlatform().invokeAndWait(Screen::getBounds);
-                    final Point loc = bot.getPlatform().invokeAndWait(Screen::getLocation);
+                    final Rectangle bounds = submit(Screen::getBounds);
+                    final Point loc = submit(Screen::getLocation);
                     if (bounds != null) {
                         if (bounds.width != (int) getWidth()) {
                             setWidth(bounds.width);
@@ -172,8 +169,10 @@ public class DevelopmentToolkitOverlay {
                         }
                     }
 
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (RejectedExecutionException e) {
+                    stop();
+                    close();
+                    return;
                 } catch (Exception e) {
                     e.printStackTrace();
                     stop();
@@ -186,75 +185,51 @@ public class DevelopmentToolkitOverlay {
             private void render(Object renderable, List<Integer> updatedHashes) {
                 try {
                     if (renderable instanceof Entity) {
+                        final int hash = renderable.hashCode();
                         if (renderable instanceof OSRSEntity) {
-                            final int hash = renderable.hashCode();
-                            final var model = bot.getPlatform().invokeAndWait(() -> OpenHull.lookup(((OSRSEntity) renderable).uid));
+                            SimplePolygon model = submit(() -> OpenHull.lookup(((OSRSEntity) renderable).uid));
                             if (model == null) {
                                 return;
                             }
-                            final Paint color;
-                            if (renderable instanceof Npc) {
-                                color = Color.DODGERBLUE;
-                            } else if (renderable instanceof Player) {
-                                color = BLUE;
-                            } else if (renderable instanceof GroundItem) {
-                                color = Color.GREEN;
-                            } else {
-                                color = Color.RED;
-                            }
+                            final Paint color = getColor(renderable);
                             updatedHashes.add(hash);
                             shape(hash, model, color);
                         } else {
-                            final int hash = renderable.hashCode();
-                            final Polygon model = bot.getPlatform().invokeAndWait(() -> {
-                                final Model m = ((Entity) renderable).getModel();
-                                return m == null ? null : m.projectConvexHull();
-                            });
+                            Polygon model = submit(() -> Optional.ofNullable(((Entity) renderable).getModel())
+                                    .map(Model::projectConvexHull)
+                                    .orElse(null));
                             if (model == null) {
                                 return;
                             }
-                            final Paint color;
-                            if (renderable instanceof Npc) {
-                                color = Color.DODGERBLUE;
-                            } else if (renderable instanceof Player) {
-                                color = BLUE;
-                            } else if (renderable instanceof GroundItem) {
-                                color = Color.GREEN;
-                            } else {
-                                color = Color.RED;
-                            }
+                            Paint color = getColor(renderable);
                             updatedHashes.add(hash);
                             poly(hash, model, color);
                         }
-                    } else if (renderable instanceof InterfaceComponent) {
+                    } else if (renderable instanceof InterfaceComponent component) {
                         final int hash = renderable.hashCode();
-                        final InterfaceComponent component = (InterfaceComponent) renderable;
-                        final Rectangle bounds = bot.getPlatform().invokeAndWait(component::getBounds);
+                        final Rectangle bounds = submit(component::getBounds);
                         if (bounds == null) {
                             return;
                         }
                         updatedHashes.add(hash);
                         rect(hash, bounds, HOTPINK);
-                    } else if (renderable instanceof SpriteItem) {
+                    } else if (renderable instanceof SpriteItem item) {
                         final int hash = renderable.hashCode();
-                        final SpriteItem component = (SpriteItem) renderable;
-                        final Rectangle bounds = bot.getPlatform().invokeAndWait(component::getBounds);
+                        final Rectangle bounds = submit(item::getBounds);
                         if (bounds == null) {
                             return;
                         }
                         updatedHashes.add(hash);
                         rect(hash, bounds, YELLOWGREEN);
-                    } else if (renderable instanceof Vertex) {
-                        final var vertex = (Vertex) renderable;
-                        final var position = bot.getPlatform().invokeAndWait(vertex::getPosition);
+                    } else if (renderable instanceof Vertex vertex) {
+                        final var position = submit(vertex::getPosition);
                         if (position == null) {
                             return;
                         }
                         render(position, updatedHashes);
-                    } else if (renderable instanceof Coordinate) {
-                        final var vertex = (Coordinate) renderable;
+                    } else if (renderable instanceof Coordinate vertex) {
                         final var hash = vertex.hashCode();
-                        final var position = bot.getPlatform().invokeAndWait(() -> vertex.getBounds());
+                        final var position = submit(() -> vertex.getBounds());
                         if (position == null) {
                             return;
                         }
@@ -264,6 +239,24 @@ public class DevelopmentToolkitOverlay {
                 } catch (Exception ignored) {
 
                 }
+            }
+
+            private <T> T submit(Callable<T> callable) {
+                return bot.getPlatform().submit(callable).join();
+            }
+
+            private static @NotNull Paint getColor(final Object renderable) {
+                final Paint color;
+                if (renderable instanceof Npc) {
+                    color = Color.DODGERBLUE;
+                } else if (renderable instanceof Player) {
+                    color = BLUE;
+                } else if (renderable instanceof GroundItem) {
+                    color = Color.GREEN;
+                } else {
+                    color = Color.RED;
+                }
+                return color;
             }
 
             private void rect(int hash, Rectangle bounds, Paint color) {

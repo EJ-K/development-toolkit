@@ -12,18 +12,16 @@ import com.runemate.game.api.hybrid.queries.*;
 import com.runemate.game.api.hybrid.queries.results.*;
 import com.runemate.game.api.hybrid.region.*;
 import com.runemate.game.api.hybrid.util.*;
-import java.awt.event.*;
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.function.*;
 import java.util.regex.*;
 import java.util.stream.*;
 import javafx.beans.property.*;
 import javafx.beans.value.*;
-import javafx.event.ActionEvent;
+import javafx.event.*;
 import javafx.fxml.*;
 import javafx.geometry.*;
 import javafx.scene.Node;
@@ -79,12 +77,8 @@ public class QueryBuilderExtension extends VBox implements Initializable {
         loader.setController(this);
         loader.setRoot(this);
         loader.load(fxmlInputStream);
-        try {
-            final URL url = bot.getPlatform().invokeAndWait(() -> Resources.getAsURL("css/DevelopmentToolkitPage.css"));
-            getStylesheets().add(url.toExternalForm());
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        }
+        final URL url = bot.getPlatform().submit(() -> Resources.getAsURL("css/DevelopmentToolkitPage.css")).join();
+        getStylesheets().add(url.toExternalForm());
     }
 
     @Override
