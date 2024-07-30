@@ -19,6 +19,7 @@ import com.runemate.game.api.hybrid.local.hud.interfaces.SpriteItem;
 import com.runemate.game.api.hybrid.location.*;
 import com.runemate.game.api.hybrid.web.vertex.*;
 import com.runemate.game.api.osrs.entities.*;
+import com.runemate.pathfinder.path.*;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
@@ -222,6 +223,12 @@ public class DevelopmentToolkitOverlay {
                         updatedHashes.add(hash);
                         rect(hash, bounds, YELLOWGREEN);
                     } else if (renderable instanceof Vertex vertex) {
+                        final var position = submit(vertex::getPosition);
+                        if (position == null) {
+                            return;
+                        }
+                        render(position, updatedHashes);
+                    } else if (renderable instanceof MateVertex vertex) {
                         final var position = submit(vertex::getPosition);
                         if (position == null) {
                             return;

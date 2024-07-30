@@ -5,8 +5,11 @@ import com.runemate.bots.dev.ui.element.query.*;
 import com.runemate.bots.ui.util.*;
 import com.runemate.bots.util.*;
 import com.runemate.game.api.hybrid.location.*;
+import com.runemate.game.api.hybrid.location.navigation.*;
 import com.runemate.game.api.hybrid.util.*;
 import com.runemate.game.api.hybrid.web.*;
+import com.runemate.pathfinder.*;
+import com.runemate.pathfinder.model.*;
 import com.runemate.ui.control.*;
 import java.io.*;
 import java.lang.reflect.*;
@@ -57,6 +60,8 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
     private Spinner<Integer> xSpinner, ySpinner, zSpinner;
 
     private ToggleSwitch hoverSwitch, overlaySwitch;
+
+    private Pathfinder pathfinder;
 
     private QueryBuilderExtension queryBuilderExtension;
 
@@ -296,7 +301,14 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
                             return Collections.emptyList();
                         }
 
-                        var path = WebPath.buildTo(new Coordinate(x, y, z));
+                        Path path = getPathfinder().pathBuilder()
+                            .destination(new Coordinate(x, y, z))
+                            .enableCharterShips(true)
+                            .avoidWilderness(true)
+                            .enableMinigameTeleports(false)
+                            .poh(POH.builder().build())
+                            .findPath();
+
                         return path != null ? path.getVertices() : Collections.emptyList();
                     },
                     null,
@@ -304,6 +316,13 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
                 )
             );
         });
+    }
+
+    public Pathfinder getPathfinder() {
+        if (pathfinder == null) {
+            pathfinder = Pathfinder.create(bot);
+        }
+        return pathfinder;
     }
 
     public TreeTableView<Pair<Method, Object>> getEntitiesTreeTableView() {
