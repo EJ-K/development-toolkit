@@ -761,11 +761,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
         } else if (event instanceof MessageEvent) {
             tree = chatboxTreeItem;
         } else if (event instanceof ItemEvent) {
-            if (((ItemEvent) event).getItem().getOrigin() == SpriteItem.Origin.EQUIPMENT) {
-                tree = equipmentTreeItem;
-            } else {
-                tree = inventoryTreeItem;
-            }
+            tree = inventoryTreeItem;
         } else if (event instanceof SkillEvent) {
             tree = skillTreeItem;
         } else if (event instanceof VarpEvent) {
