@@ -27,6 +27,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.*;
 import javafx.stage.*;
 import javafx.util.*;
+import org.apache.commons.lang3.*;
 
 public class DevelopmentToolkitPage extends VBox implements Initializable {
 
@@ -132,7 +133,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
         toggleSwitchContainer.getChildren().addAll(overlayLabel);
 
         overlaySwitch.selectedProperty().bindBidirectional(bot.getOverlay().showingProperty());
-        overlaySwitch.setSelected(true);
+        overlaySwitch.setSelected(SystemUtils.IS_OS_WINDOWS);
 
         final Callback<TreeTableColumn.CellDataFeatures<Pair<Method, Object>, Node>, ObservableValue<Node>> objectCallback = param -> {
             Pair<Method, Object> vv = param.getValue().getValue();
@@ -305,8 +306,7 @@ public class DevelopmentToolkitPage extends VBox implements Initializable {
                             .destination(new Coordinate(x, y, z))
                             .enableCharterShips(true)
                             .avoidWilderness(true)
-                            .enableMinigameTeleports(false)
-                            .poh(POH.builder().build())
+                            .enableMinigameTeleports(true)
                             .findPath();
 
                         return path != null ? path.getVertices() : Collections.emptyList();

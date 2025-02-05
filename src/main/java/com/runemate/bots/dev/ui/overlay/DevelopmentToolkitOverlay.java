@@ -13,7 +13,7 @@ import com.runemate.game.api.hybrid.entities.Player;
 import com.runemate.game.api.hybrid.entities.details.Renderable;
 import com.runemate.game.api.hybrid.geom.*;
 import com.runemate.game.api.hybrid.local.Screen;
-import com.runemate.game.api.hybrid.local.hud.Model;
+import com.runemate.game.api.hybrid.local.hud.*;
 import com.runemate.game.api.hybrid.local.hud.interfaces.InterfaceComponent;
 import com.runemate.game.api.hybrid.local.hud.interfaces.SpriteItem;
 import com.runemate.game.api.hybrid.location.*;
@@ -185,16 +185,34 @@ public class DevelopmentToolkitOverlay {
 
             private void render(Object renderable, List<Integer> updatedHashes) {
                 try {
-                    if (renderable instanceof Entity) {
+                    if (renderable instanceof InteractableRectangle ir) {
+                        int hash = ir.hashCode();
+                        updatedHashes.add(hash);
+                        rect(hash, ir, HOTPINK);
+                    } else if (renderable instanceof MenuItem ir) {
+                        int hash = ir.hashCode();
+                        updatedHashes.add(hash);
+                        rect(hash, ir.getBounds(), HOTPINK);
+                    } else if (renderable instanceof Entity) {
                         final int hash = renderable.hashCode();
-                        if (renderable instanceof OSRSEntity) {
-                            SimplePolygon model = submit(() -> OpenHull.lookup(((OSRSEntity) renderable).uid));
+                        if (renderable instanceof OSRSEntity e) {
+//                            SimplePolygon model = submit(() -> OpenHull.lookup(((OSRSEntity) renderable).uid));
+//                            if (model == null) {
+//                                return;
+//                            }
+//                            final Paint color = getColor(renderable);
+//                            updatedHashes.add(hash);
+//                            shape(hash, model, color);
+
+                            final Polygon model = submit(() -> {
+                                Model m = e.getModel();
+                                return m == null ? null : m.projectConvexHull();
+                            });
                             if (model == null) {
                                 return;
                             }
-                            final Paint color = getColor(renderable);
                             updatedHashes.add(hash);
-                            shape(hash, model, color);
+                            poly(hash, model, getColor(e));
                         } else {
                             Polygon model = submit(() -> Optional.ofNullable(((Entity) renderable).getModel())
                                     .map(Model::projectConvexHull)

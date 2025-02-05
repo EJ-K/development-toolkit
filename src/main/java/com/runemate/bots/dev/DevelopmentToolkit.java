@@ -198,7 +198,8 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
     private TreeItem<Pair<Method, Object>> grandExchangeTreeItem, chatboxTreeItem, inventoryTreeItem, moneyPouchTreeItem, skillTreeItem,
         varpTreeItem, animationTreeItem, hitsplatTreeItem, equipmentTreeItem, varbitTreeItem, playerMovementTreeItem, deathTreeItem,
         menuInteractionTreeItem, targetTreeItem, projectileTreeItem, varcTreeItem, groundItemTree, playerTree, npcTree, gameObjectTree,
-        spotAnimationTreeItem;
+        spotAnimationTreeItem,
+        engineStateTreeItem;
     private ObjectProperty<DevelopmentToolkitPage> botInterfaceProperty;
 
     public DevelopmentToolkit() {
@@ -265,11 +266,7 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
 
     @Override
     public void onStart(String... arguments) {
-        if (Environment.isRS3()) {
-            GameEvents.Universal.LOGIN_HANDLER.disable();
-        } else {
-            GameEvents.OSRS.NPC_DISMISSER.disable();
-        }
+        GameEvents.Universal.NPC_DISMISSER.disable();
         GameEvents.Universal.LOBBY_HANDLER.disable();
         GameEvents.Universal.BANK_PIN.disable();
         GameEvents.Universal.INTERFACE_CLOSER.disable();
@@ -435,7 +432,8 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             gameObjectTree = new TreeItem<>(new Pair<>(null, GameObjectListener.class.getSimpleName())),
             menuInteractionTreeItem = new TreeItem<>(new Pair<>(null, MenuInteractionListener.class.getSimpleName())),
             projectileTreeItem = new TreeItem<>(new Pair<>(null, ProjectileListener.class.getSimpleName())),
-            spotAnimationTreeItem = new TreeItem<>(new Pair<>(null, SpotAnimationListener.class.getSimpleName()))
+            spotAnimationTreeItem = new TreeItem<>(new Pair<>(null, SpotAnimationListener.class.getSimpleName())),
+            engineStateTreeItem = new TreeItem<>(new Pair<>(null, EngineListener.class.getSimpleName()))
         );
         botInterfaceProperty().get().getMiscTreeTableView().getRoot().getChildren().setAll(
             new ReflectiveTreeItem.StaticReflectiveTreeItem(AccountInfo.class),
@@ -500,7 +498,6 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             new ReflectiveTreeItem.StaticReflectiveTreeItem(LootingBag.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(ControlPanelTab.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(OptionsTab.class),
-            new ReflectiveTreeItem.StaticReflectiveTreeItem(KourendHouseFavour.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(AchievementDiary.class),
             new ReflectiveTreeItem.StaticReflectiveTreeItem(MakeAllInterface.class)
         );
@@ -774,193 +771,14 @@ public class DevelopmentToolkit extends LoopingBot implements EmbeddableUI, Glob
             tree = varcTreeItem;
         } else if (event instanceof MenuInteractionEvent) {
             tree = menuInteractionTreeItem;
+        } else if (event instanceof EngineStateEvent) {
+            tree = engineStateTreeItem;
         } else {
             return;
         }
 
         Platform.runLater(() -> tree.getChildren().add(item));
     }
-
-//    @Override
-//    public void onMessageReceived(MessageEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> chatboxTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onContentsChanged(MoneyPouchEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> moneyPouchTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onItemAdded(ItemEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onItemRemoved(ItemEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> inventoryTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onItemEquipped(ItemEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onItemUnequipped(ItemEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> equipmentTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onExperienceGained(SkillEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onLevelUp(SkillEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> skillTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onValueChanged(VarpEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> varpTreeItem.getChildren().add(new ReflectiveTreeItem(null, new VarpEventWrapper(event))));
-//    }
-//
-//    @Override
-//    public void onValueChanged(VarbitEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> varbitTreeItem.getChildren().add(new ReflectiveTreeItem(null, new VarbitEventWrapper(event))));
-//    }
-//
-//    @Override
-//    public void onSlotUpdated(GrandExchangeEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> grandExchangeTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onAnimationChanged(AnimationEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> animationTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onHitsplatAdded(HitsplatEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> hitsplatTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onDeath(DeathEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> deathTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onInteraction(MenuInteractionEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> menuInteractionTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onPlayerMoved(PlayerMovementEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> playerMovementTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onTargetChanged(TargetEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> targetTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onProjectileLaunched(ProjectileLaunchEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> projectileTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onStringChanged(final VarcEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> varcTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onIntChanged(final VarcEvent event) {
-//        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-//            return;
-//        }
-//        Platform.runLater(() -> varcTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-//    }
-//
-//    @Override
-//    public void onCycleStart() {
-//
-//    }
-
-    /*@Override
-    public void onIntChanged(VarcEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> varcTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }
-
-    @Override
-    public void onStringChanged(VarcEvent event) {
-        if (!developmentToolkitPage.getEventsTitledPane().isExpanded()) {
-            return;
-        }
-        Platform.runLater(() -> varcTreeItem.getChildren().add(new ReflectiveTreeItem(null, event)));
-    }*/
 
     private static final class RegexSearchPredicate implements Predicate<Pair<Method, Object>> {
 
